@@ -1,0 +1,1000 @@
+%https://www.sciencedirect.com/special-issue/314786/high-performance-computing-heterogeneous-systems-and-subsystems
+
+%% 
+%% Copyright 2019-2021 Elsevier Ltd
+%% 
+%% This file is part of the 'CAS Bundle'.
+%% --------------------------------------
+%% 
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% The list of all files belonging to the 'CAS Bundle' is
+%% given in the file `manifest.txt'.
+%% 
+%% Template article for cas-dc documentclass for 
+%% double column output.
+
+\documentclass[a4paper,fleqn]{cas-dc}
+
+% If the frontmatter runs over more than one page
+% use the longmktitle option.
+
+%\documentclass[a4paper,fleqn,longmktitle]{cas-dc}
+
+\usepackage[numbers]{natbib}
+%\usepackage[authoryear]{natbib}
+%\usepackage[authoryear,longnamesfirst]{natbib}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xurl}
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\usepackage{todonotes}
+\graphicspath{ {./figures/} }
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\sisetup{round-mode=places, round-precision=2}
+\usepackage{enumitem}
+
+\usepackage{soul}
+
+\newcommand{\blindtext}[1]{\textbf{$<<$Text hidden for blind review$>>$}}
+\newcommand{\sergio}[1]{\textcolor{black}{#1}}
+\newcommand{\mm}[1]{\textcolor{black}{#1}}
+
+\usepackage[percent]{overpic}
+\usepackage[super]{nth}
+
+\DeclareUnicodeCharacter{2009}{\,}
+
+\begin{document}
+
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
+
+% Short title
+\shorttitle{MPI Malleability Validation under Real-World Conditions}    
+
+% Short author
+\shortauthors{S. Iserte et al.}  
+
+\title [mode = title]{MPI Malleability Validation under Replayed Real-World HPC Conditions}
+
+
+\author[1]{Sergio Iserte}[orcid=0000-0003-3654-7924]
+\ead{sergio.iserte@bsc.es}
+\cormark[1]
+\cortext[1]{Corresponding author}
+
+\author[2]{Maël Madon}[orcid=0000-0001-9476-4682]
+\author[2]{Georges Da~Costa}[orcid=0000-0002-3365-7709]
+\author[2]{Jean-Marc Pierson}[orcid=0000-0001-8948-0474]
+\author[1]{Antonio J. Peña}[orcid=0000-0002-3575-4617]
+
+\affiliation[1]{organization={Barcelona Supercomputing Center (BSC)},
+            %addressline={}, 
+            city={Barcelona},
+            %citysep={}, % Uncomment if no comma needed between city and postcode
+            %postcode={08034}, 
+            % state={},
+            country={Spain}}
+            
+\affiliation[2]{organization={University of Toulouse, CNRS, Toulouse INP, IRIT},
+            % addressline={}, 
+            city={Toulouse},
+            % citysep={}, % Uncomment if no comma needed between city and postcode
+            %postcode={12071}, 
+            % state={},
+            country={France}}
+
+% Corresponding author text
+%\cortext[1]{Corresponding author}
+
+% Footnote text
+%\fntext[1]{}
+
+% For a title note without a number/mark
+%\nonumnote{}
+
+% Here goes the abstract
+\begin{abstract}
+Dynamic Resource Management (DRM) techniques can be leveraged to maximize throughput and resource utilization in computational clusters.
+Although DRM has been extensively studied through analytical workloads and simulations, skepticism persists among end administrators and users regarding their feasibility under real-world conditions.
+To address this problem, we propose a novel methodology for validating DRM techniques, such as malleability, in realistic scenarios that reproduce actual cluster conditions of jobs and users by replaying workload logs on a High-performance Computing (HPC) infrastructure.
+Our methodology is capable of adapting the workload to the target cluster.
+We evaluate our methodology in a malleability-enabled 125-node partition of the Marenostrum~5 supercomputer. Our results validate the proposed method and assess the benefits of MPI malleability on a novel use case of a pioneer user of malleability (our ``PhD Student''): parallel-efficiency-aware malleability reduced a malleable workload time by 27\% without delaying the baseline workload and increasing global resource utilization by 8\%.
+\end{abstract}
+
+% Use if graphical abstract is present
+%\begin{graphicalabstract}
+%\includegraphics{}
+%\end{graphicalabstract}
+
+% Keywords
+% Each keyword is seperated by \sep
+\begin{keywords}
+\sep Dynamic Resource Management
+\sep Replay with Feedback
+\sep Malleability
+\sep Workload Characterization
+\sep Cluster Computing
+\end{keywords}
+
+\maketitle
+
+\section{Introduction}\label{intro}
+High-performance computing (HPC) facilities are critical for advancing scientific research, engineering, and data analysis across various domains, from genomic research~\cite{martinez_dynamic_2013, zhong_gpu_2025} to multi-physics simulations~\cite{hess_gromacs_2008, vazquez_alya_2016, caviedes-voullieme_serghei_2023} through artificial intelligence~\cite{martinez-cuenca_use_2023, rosciszewski_optimizing_2023, godoy_large_2024}. 
+These computational clusters rely on efficiently utilizing resources to maximize their productivity. Dynamic resource management (DRM) techniques have emerged as key strategies to improve the utilization of these systems~\cite{bungartz_invasive_2013, garcia_hints_2014, lopez_openmp_2021}. These techniques enable the flexible allocation and reallocation of computational resources and reconfiguring jobs accordingly to adapt to the dynamic nature of HPC workloads.
+Among others, malleability based on the Message-Passing Interface (MPI) is one of the most extended DRM approaches to process layout reshape and data redistribution~\cite{martin_flex-mpi_2013, martin-alvarez_proteo_2024, huber_bridging_2025, iserte_resource_2025}.
+%Notably, message-passing interface (MPI) malleability facilitates 1) resource reallocation, 2) process layout reshaping, 3) data redistribution among ranks, and 4) seamless job resumption during runtime. 
+%This flexibility significantly boosts productivity by increasing the number of completed jobs per unit of time and optimizing overall resource utilization.
+
+Despite their potential, DRM techniques face several challenges that hinder their adoption in production environments~\cite{iserte_dmr_2018}.
+Particularly, MPI malleability requires 1) a malleability-ready resource management system (RMS), which many existing facilities do not possess, and 2) a malleability framework to develop malleable applications compatible with the RMS and the available distributed parallel runtime systems in the cluster.
+These kinds of limitations increase the complexity of evaluating DRM techniques with realistic workloads and foster skepticism among end users and system administrators regarding DRM's practical benefits and feasibility.
+In this regard, previous studies evaluating DRM techniques have relied on simplistic simulations, biased benchmarks, or synthetic traces, often failing to accurately represent real-world systems' conditions. These analytic workloads do not capture the variability and unpredictability of user behaviors observed in production systems. As a result, researchers in this field have faced challenges in conducting impactful demonstrations that significantly influence the community.
+
+To address the challenges of evaluating DRM techniques, we propose a novel methodology that leverages supercomputer logs to generate realistic workloads based on actual user submission behaviors, including temporal patterns across hours and days of the week. Our approach introduces a mechanism called the \textit{User-Based Submitter}, designed to scale across different computing clusters. Rather than relying on synthetic simulations, this method replays real user interactions from production supercomputers, enabling a more accurate and comprehensive evaluation of DRM techniques.
+
+We further incorporate malleable jobs into these replayed workloads to assess the impact of DRM on job execution and system performance. This allows us to observe the effects of job malleability and resource reallocation in a controlled yet realistic environment. Notably, the study includes the perspective of a pioneering user—submitting the first malleable jobs in a 125-node partition—demonstrating the potential of our methodology to validate previous findings and uncover new insights in real HPC settings. It is worth noting that the cluster size used in our experiments ranks among the largest evaluated in state-of-the-art malleability studies (see Section~\ref{sec:related}).
+
+In summary, this paper presents 
+1) \textbf{a methodology to replay logs in any computational cluster keeping the logic behind user submissions}. 
+Instead of a mathematical model, this methodology uses the techniques of user sampling from a recorded log and replay with feedback to reproduce the workload in a target system (see Section~\ref{sec:methodology}).
+This paper particularly 
+2) \textbf{designs and analyzes a novel case study of the adoption of malleability in a production system}. For this purpose, the authors exemplify this event with a new user (``the student'') who is the pioneer in submitting malleable jobs to the cluster. Among all the possible scenarios, the authors have decided to develop a case that paves the way to more complex malleable workloads (see Section~\ref{sec:experiments}).
+Similarly to hardware simulators that have to be validated in actual hardware to be published, this paper presents, for the first time in the literature, 
+3) \textbf{the validation of MPI malleability using a real workload in a malleability-enabled supercomputer}, without simulations or synthetic benchmarks (see Section~\ref{sec:results}). 
+
+The paper ends with a discussion of the applicability of the presented technique and the meaningful results obtained in the evaluation of the validation methodology (see Section~\ref{sec:discussion}). It concludes with a summary of our contributions and findings (see Section~\ref{sec:conclusion}).
+
+\section{Related Work}\label{sec:related}
+This section reviews the previous efforts done in the fields of workload replay and dynamic resource management.
+
+\subsection{Workload Replay}
+A classical approach to evaluate resource management policies consists of replaying a historical workload from its log.
+However, modifying the target infrastructure or scheduling policies impacts the system's performance (e.g., response time, computing speed, resource availability),
+which has a crucial impact on the submission behavior of its users~\cite{zakay_preserving_2014, schlagkamp_influence_2017}.
+As a result, many previous works in the field have generalization issues, since they do not account for these behaviors.
+A solution is to perform closed-loop simulations~\cite{schroeder_open_2006},
+where the submitted workload adapts to the simulated performance of the system.
+To do so, the authors in~\cite{zakay_identifying_2013} extract relevant submission patterns from historical workloads to replay them in simulations.
+More recently, the authors in~\cite{madon_replay_2024} provide an in-depth study of this technique, named ``replay with feedback''.
+In~\cite{feitelson_resampling_2021}, the authors go one step further and suggest using \emph{resampling} with feedback for performance evaluation where the historical workload is scaled to the target infrastructure through user sampling.
+
+\subsection{Dynamic Resource Management}
+The MPI paradigm is the {\it de facto} standard for implementing distributed parallel applications designed to run on computational clusters. MPI provides efficient and straightforward mechanisms for communication among different processes, known as ranks, each with its own memory address space.
+In a traditional MPI job, a fixed number of ranks are initiated at the start and remain active until the completion of the job. This static allocation of resources may lead to inefficiencies, especially in dynamic and heterogeneous computing environments.
+
+MPI malleability addresses these inefficiencies through DRM. This technique allows the number of MPI ranks to be modified during the execution of a program, enabling the application to resize on the fly~\cite{feitelson_packing_1996}. Malleable MPI applications may adapt to changing computational resources, improving overall system utilization and application performance.
+Although MPI malleability could be seen as a variant of checkpoint/restart, most modern solutions implement on-memory data redistribution, reducing overheads from accessing storage media.
+
+Closely related to malleability is the concept of moldability. While malleability involves adjusting the number of MPI ranks during the execution of a job, moldability determines the number of ranks at the time of job submission before its initialization~\cite{lublin_workload_2003}. 
+In this regard, jobs specify a range of sizes, allowing the job scheduler to choose the most suitable configuration based on current system availability and load.
+This approach provides an extra degree of flexibility by enabling better resource allocation at job scheduling time, which can lead to improved system efficiency and potentially shorter wait times for job initiation. However, unlike malleable applications, moldable applications do not adjust their resource usage dynamically during runtime.
+
+Surveys in ~\cite{aliaga_survey_2022, Tarraf_malleability_2024} extesively review the state--of--the--art of malleability in HPC systems. Instead, we focus on how malleability frameworks and actual RMSs have been evaluated with workloads to demonstrate the usefulness of DRM in clusters.
+
+ReSHAPE is a coupled solution for adaptive workloads, including its specific reconfiguration libraries, scheduler, and runtime system.
+This strong integration forces ReSHAPE users to develop applications that are compatible with this system.
+In~\cite{sudarsan_reshape_2007}, ReSHAPE is evaluated in a 50-node cluster with a 5-job workload composed of the benchmarks LU, MM, Master-worker, Jacobi, and FFT, submitted simultaneously.
+A subsequent publication added to the workload job instances of a malleable version of LAMMPS~\cite{sudarsan_dynamic_2009}.
+
+PARM (acronym of Power-Aware Resource Manager) relies on over-provisioning, power capping, and job malleability, based on CHARM++ and Slurm~\cite{sarood_maximizing_2014}.
+PARM is evaluated in a 38-node cluster with a 5-job workload comprising the benchmarks and applications Wave2D, Jacobi2D, LeanMD, Lulesh, and AMR.
+Larger experiments relied on the Slurm simulator with a log of 68,936 jobs submitted to a 40,960-node cluster. The authors assume that all the jobs in the workload are malleable and assign them random scalability from a set of samples.
+
+The solution developed by Prabhakaran et al. combines AMPI (based on CHARM++) with the RMS Torque/Maui to tackle malleable jobs~\cite{sarood_maximizing_2014}. 
+The authors evaluate in a 15-node cluster a workload based on a modified version of the ESP benchmark to contain various percentages of rigid, malleable, and evolving jobs composed of 230 instances.
+While the rigid jobs followed the benchmark directives, the flexible jobs were a malleable version of LeanMD and an evolving implementation of the synthetic Quadflow.
+
+The Dynamic Management of Resources Library (DMRlib) (detailed in Section~\ref{subsec:dmr}) was evaluated in a 129-node cluster with four benchmarks and applications (CG, Jacobi, N-Body, HPG-Aligner~\cite{iserte_dynamic_2019}) instantiated in 2,000-job workloads with various percentages of malleable jobs and turning on and off malleability in the applications of the workloads~\cite{iserte_dmrlib_2020}.
+The authors leveraged the Feitelson synthetic workload generator~\cite{feitelson_towards_1996} to evaluate job scheduling algorithms in HPC.
+This generator provides a way to simulate job arrival patterns, job sizes, and resource demands based on empirical data from real-world systems.
+
+%In summary, prior research in this field has explored the effects of DRM using approaches ranging from benchmarks to simulations, often relying on artificially generated workloads that arbitrarily set job scales and submission patterns (e.g., steady or bursty).
+
+%In contrast, with this research, we aim to validate past and future synthetic setups and results obtained for dynamic resource management replaying actual behaviors of users which are extremely difficult to be modeled with a mathematical function.
+
+While prior research has explored the potential of DRM through benchmarks and simulations, these studies often rely on synthetic workloads with arbitrarily defined job sizes and submission patterns—such as steady or bursty arrivals—that fail to capture the complexity and variability of real-world HPC usage. These simplified models limit the generalizability and applicability of the findings to production systems.
+
+In contrast, our work introduces a methodology that replays actual user behavior extracted from supercomputer logs, preserving the nuanced temporal and structural characteristics of real workloads. This approach enables the validation of past and future synthetic setups and their results, overcoming the limitations of synthetic modeling where user behavior is too complex to be accurately captured by mathematical functions. By grounding the evaluation in real-world conditions, we aim to bridge the gap between simulation-based studies and practical deployment in HPC infrastructures.
+
+%In contrast, this work introduces a more robust methodology, leveraging user sampling and workload replay with feedback. Using a workload log from the Parallel Workload Archive\footnote{\url{https://www.cs.huji.ac.il/labs/parallel/workload}}, we adapt, fit, and replicate its activity on a malleability-enabled supercomputer partition. Additionally, we introduce a user periodically running malleable scientific applications based on a defined behavioral pattern.
+
+%Out of the infinite cases that can be studied and given the current limitations of DRM integration in supercomputers, our study focuses on a practical scenario where infrastructure progressively adopts MPI malleability through a specific user with defined duties and deadlines. This scenario has not been previously studied in the literature.
+
+\section{Methodology}\label{sec:methodology}
+
+In order to study DRM under real-world conditions,
+our method consists of reproducing the nominal activity of a cluster computing infrastructure.
+We use a workload submitter based on the logic of users (Section~\ref{subsec:submitter}).
+\sergio{The nominal activity is represented by submitting non-malleable jobs.}
+These jobs, later called ``baseline workload'', are reproduced from historical workload logs and sized to our testbed through user sampling (Section~\ref{subsec:sampling}).
+To study the effects of DRM on top of the baseline workload, the submitter includes an additional user leveraging moldability and malleability in her jobs, thanks to a malleable runtime (Section \ref{subsec:dmr}).
+
+\iffalse
+\begin{table}[tbp]
+    \centering
+    \begin{tabular}{lll}
+        \toprule
+         & \textbf{baseline workload} & \textbf{student workload} \\
+         \midrule
+         \textbf{origin} & historical workload & synthetic \\
+         \textbf{UBS user type} & traditional & generative \\
+         \textbf{replay method} & original timestamps & submit with feedback \\
+         \textbf{job type} & mock MPI job & real MPI job \\
+         \textbf{malleability enabled?} & no & yes \\
+         \bottomrule
+         
+    \end{tabular}
+    \caption{Summary characteristics of the two workloads submitted simultaneously in the cluster}
+    \label{tab:my_label}
+\end{table}
+\fi
+
+\subsection{User-Based Workload Submitter}
+\label{subsec:submitter}
+
+The core of the experiments presented in this paper relies on a piece of software running throughout the whole experiment duration: the User-Based Submitter (UBS)\footnote{Code available at \url{https://gitlab.irit.fr/sepia/coop/replay-on-rjms/poc}}.
+UBS reproduces HPC users issuing job submissions to the Slurm resource manager at certain timestamps.
+%\todo{Maël@IRIT: make an illustration?}
+% the two types of users, the UBS, submitting jobs to SLURM
+There are two types of users as described below:
+\begin{itemize}[wide]
+    \item \textit{Traditional users} submit jobs whose execution time, number of parallel resources, and submission time are given in an input file, based on a historical workload.
+    These are used to replay the baseline workload.
+    Consequently, the submitted jobs replicate the traditional rigid workload, allocating the requested resources during the desired time.
+
+    \item \textit{Generative users} submit malleable jobs, using feedback on the status of previous submissions to decide on the following job submissions (see \cite{madon_replay_2024}).
+    More precisely, a generative user takes as input a triplet $(t_0, \Delta t, N)$
+    with $t_0$ the timestamp of their first submission,
+    $\Delta t$ the think time between the end of the previous job and the submission of the new job and $N$ the total number of submissions from this user.
+    %These are used to emulate the additional user, leveraging malleability and moldability.
+    %The submitted jobs are actual instances of scientific parallel applications.
+\end{itemize}
+
+In the UBS, traditional and generative users are managed in two dedicated threads. 
+The thread managing the traditional users sleeps until the next submission time, then calls a shell script issuing the job submission, passing it all relevant parameters about the job (i.e.: type, duration, or number of resources).
+The thread of the generative users uses a socket to be informed of the completion of previous jobs. 
+When a job owned by a generative user terminates, a new thread is started, sleeping for $\Delta t$ seconds before calling the submission script.
+
+\subsection{User Sampling}
+\label{subsec:sampling}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\begin{figure*}[tbp]
+  \centering
+  \begin{minipage}{.6\linewidth}
+    \begin{algorithm}[H]
+      %\large
+    \caption{User sampling from workload}\label{alg:sampling}
+    \begin{algorithmic}[1]
+        \REQUIRE $\bar{m} =$ the target median/average load per day
+        \REQUIRE $M =$ the number of nodes in the target platform
+
+        \STATE $U \leftarrow$ list of users in the workload
+        \STATE $pool \leftarrow \{\}$, $m \leftarrow 0$
+        % \STATE users.shuffle()
+        \WHILE{$m \notin [.9\bar{m}, 1.1\bar{m}]$}
+            \STATE $u \leftarrow$ draw a random user from $U$, without replacement 
+            \IF{$max($nodes required by $u) < M$}
+                \STATE $pool$.add($u$)
+                \STATE $m \leftarrow$ load per day from users in $pool$
+                \IF{$m > 1.1\bar{m}$}
+                    \STATE $pool$.remove($u$)
+                    \STATE $m \leftarrow$ load per day from users in $pool$
+                \ENDIF
+            \ENDIF
+        \ENDWHILE
+        \IF{$m \notin [.9\bar{m}, 1.1\bar{m}]$}
+            \STATE print("SAMPLING FAILED!")
+        \ENDIF
+
+        \ENSURE $pool$
+    \end{algorithmic}
+
+    \end{algorithm}
+  \end{minipage}
+\end{figure*}
+
+To create a realistic baseline workload of the actual activity in a cluster platform,
+we leverage historical workload logs.
+The challenge is to adapt this workload to the size of our testbed
+\textit{without losing the logic of submission of the original users}.
+Thus, instead of randomly sampling jobs from the original log,
+we rather perform a sampling of \textit{users}, 
+proceeding as described below (see Algorithm~\ref{alg:sampling}). 
+
+First, we choose a target level of activity for the platform,
+in terms of average or median load submitted per day.
+For example, if the testbed has 100 nodes and we target 85\% activity,
+we want the baseline workload to have approximately $85\times 24$ node-hours per day.
+To reach the level, we proceed iteratively by randomly adding users to a user pool.
+At each step, we calculate the load submitted daily by the users in the pool
+by summing the product of execution time and number of nodes for all jobs submitted by these users in the original log.
+If the activity reaches the desired level, the process is stopped; 
+otherwise, we add a new user.
+The last added user may overshoot the target;
+in this case, that user is removed from the pool before adding another.
+
+\subsection{Dynamic Resource Management}\label{subsec:dmr}
+
+\begin{figure*}
+\centering
+    \includegraphics[clip,width=0.8\linewidth,trim={1.2cm 1.2cm 1.2cm 0.25cm}]{figures/dmr-slurm2.png}
+    \caption{DMRlib Application--MPI--Slurm communication.}
+    \label{fig:dmr-slurm}
+\end{figure*}
+
+This research enables DRM by leveraging moldability and malleability thanks to the Dynamic Management of Resources Library (DMRlib)~\cite{iserte_dmrlib_2020}.
+DMRlib is a high-level API that facilitates the adoption of malleability in HPC codes. 
+DMRlib implements a communication layer between the parallel distributed runtime (PDR) and the RMS, driving the management of processes and resources transparently to the user while providing flexibility to increase productivity and resource utilization of HPC facilities.
+
+Figure~\ref{fig:dmr-slurm} depicts the operation of dynamic resource management in DMRlib, which is described as follows:
+
+\begin{itemize}
+\item During execution, jobs periodically expose their readiness for reconfiguration to the RMS.
+\item This communication occurs at a synchronization point specified in the code, where the reconfiguration process may commence. In iterative applications, the end of an iteration often serves as an ideal synchronization point.
+\item The RMS, with its cluster-wise information and the performance metrics provided by a monitor, determines reconfiguration actions folowing its defined policies, and informs the PDR.
+\item If this results in a change to the job size, the RMS reallocates resources and returns the new number of processes, which may involve either expanding or shrinking the job.
+\item Finally, the PDR redistributes the data among the processes according to the application's guidelines, allowing jobs to continue execution with the new process layout from the point where the reconfiguration was triggered.
+\end{itemize}
+
+%\begin{figure}
+%    \includegraphics[clip,width=0.8\linewidth,trim={0.1cm 0.0cm 0.1cm 0.1cm}]{figures/dmr-slurm.png}
+%    \caption{DMRlib Application--MPI--Slurm communication.}
+%    \label{fig:dmr-slurm}
+%\end{figure}
+
+%DMRlib is presented in two flavors of PDR: Nanos++ (the OmpSs programming model runtime) and the Message Passing Interface (MPI).
+In this work, DMRlib has been configured with MPICH\footnote{\url{https://www.mpich.org}}, as the PDR, and Slurm\footnote{\url{https://slurm.schedmd.com}} as the RMS~\cite{iserte_towards_2025}.
+DMRlib integrates a monitoring module to track performance metrics during job execution and react accordingly by requesting/suggesting expansion or shrinking actions to the RMS.
+Metrics are gathered by TALP~\cite{lopez_talp_2021}, which collects ``POP metrics''\footnote{\url{https://pop-coe.eu/node/69}}. This set of metrics is organized hierarchically and is multiplicative; that is, the value of the parent metric is equal to the product of the child metrics.
+Among others, Parallel Efficiency (PE) reveals the inefficiency in splitting computation over processes and then communicating data among processes.
+PE is a compound metric whose components reflect two critical factors to attain good parallel performance by ensuring even distribution of computational work across processes (load balance) and minimizing time communicating data among processes (communication efficiency).
+
+%\sergio{
+%DMRlib has proven to be a competitive dynamic resource management tool by its various published %success stories, such as~\cite{iserte_towards_2024}, recipient of the Best Paper Award at PPAM'24 %International Conference.
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Experimental Setup}\label{sec:experiments}
+We implement the method described above to evaluate the impact on the job submissions of a user enabling DRM in a computing cluster.
+For the purpose of this narrative, we portray this user as a PhD student working under a tight deadline, submitting malleable instances of a scientific application.
+This section describes the testbed, workload, and specific parameters of the experimental campaign.
+
+\subsection{Cluster Computing Infrastructure}
+\label{subsec:testbed}
+The evaluation is performed in the general-purpose partition of the Marenostrum 5 (MN5) supercomputer, a pre-exascale machine integrated into the EuroHPC-JU European supercomputing infrastructure\footnote{\url{https://www.bsc.es/supportkc/docs/MareNostrum5/overview}}.
+The nodes of this partition are based on Intel Sapphire Rapids (4\textsuperscript{th} Generation Intel Xeon Scalable Processors), each equipped with two Intel Xeon Platinum 8480+ with 56 cores running at 2~GHz of base frequency, for a total of 112 cores and 256~GB of DDR5 memory.
+The nodes are interconnected through a 100~Gbit/s ConnectX-7 NDR200 InfiniBand network.
+
+Regarding the software stack, the executions rely on the GCC-10.4 compiler, the MPICH-3.2 MPI implementation, and a customized version of Slurm to support malleability included in the dynamic resource management framework DMRlib. 
+%In turn, DMR-API is configured with the DMRlib reconfiguration engine to enable process layout reshaping~\cite{Iserte2020} and with TALP to monitor the parallel efficiency and react based on it (see Section~\ref{subsec:dmr}).
+Slurm is deployed using a node running its controller daemon, while the remaining nodes act as compute nodes. 
+Slurm is configured with \texttt{sched/backfill} and \texttt{priority/multifactor} policies.
+
+To perform these experiments, we have enabled the Slurm job epilog mechanism to communicate job completions to the job submitter UBS described in Section~\ref{subsec:submitter}.
+Furthermore, we have leveraged a Slurm resource selection plugin that supports malleability~\cite{iserte_dmrlib_2020}. 
+In this regard, every time a malleable job triggers a reconfiguration, Slurm will determine the action that the runtime must perform, which may be \textit{expand}, \textit{shrink}, or \textit{none}. This Slurm plugin is based on \texttt{select/linear}, and its algorithm is explained in Section~\ref{subsubsec:exps}.
+%\sergio{Notice that this configuration and that related to the dynamic policies (Section~\ref{subsubsec:exps}) is defined once per experiment by the administrator for the whole system and is not altered on--the--fly.}
+
+The experiments are scoped within 125 nodes for up to 48 hours, which are the limits of our available submission queue. %\blindtext{default QoS of the BSC researchers in MN5}.
+Notice that a node from the allocation acts as the controller and the remaining 124 as actual compute nodes.
+
+\subsection{Traditional Users: The Baseline Workload}
+
+\begin{figure*}[tbp]
+\centering
+
+% Top part of the figure
+\begin{subfigure}[t]{0.8\linewidth}
+    \centering
+    \includegraphics[clip,width=\linewidth,trim={0.1cm 8.3cm 0.1cm 0.75cm}]{figures/submissions.png}
+    \caption{Number of submissions per day.}
+    \label{fig:wl_distrib_sub_top}
+\end{subfigure}
+
+\vspace{1em} % Add vertical space between subfigures
+
+% Bottom part of the figure
+\begin{subfigure}[t]{0.8\linewidth}
+    \centering
+    \includegraphics[clip,width=\linewidth,trim={0.1cm 1.1cm 0.1cm 7.5cm}]{figures/submissions.png}
+    \caption{Node-hours submitted per day.}
+    \label{fig:wl_distrib_sub_bottom}
+\end{subfigure}
+
+\caption{Distribution of job submissions and platform capacity over the days of July 2017 (x-axis).}
+\label{fig:wl_distrib_sub}
+\end{figure*}
+
+\iffalse
+\begin{figure*}[tbp]
+\centering
+    \includegraphics[clip,width=0.8\linewidth,trim={0.1cm 1.1cm 0.1cm 4.1cm}]{figures/submissions.png}
+    \caption{Distribution of job submissions in the baseline workload over the days of July 2017 included in the period (X-axis). 
+    \small
+    Each color represents a different user.
+    The horizontal line in the bottom graph is the maximum capacity of the platform
+    ($M=124\times24=2,976$ node-hours per day).}
+    \label{fig:wl_distrib_sub}
+\end{figure*}
+\begin{figure*}[tbp]
+    \includegraphics[clip,width=\linewidth,trim={0.1cm 0cm 0.1cm 0.1cm}]{figures/wl_user_sampling_july3-22.pdf}
+    \caption{Distribution of job submissions in the baseline workload over the days of July 2017 included in the period (X-axis). 
+    %\small
+    Each color represents a different user.
+    The horizontal line in the bottom graph is the maximum capacity of the platform
+    ($M=124\times24=2,976$ node-hours per day).}
+    \label{fig:wl_distrib_sub}
+\end{figure*}
+\fi
+
+\begin{figure*}[tbp]
+\centering
+    \includegraphics[clip,width=0.7\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/distrib_job_size.png}
+    \caption{Distribution of job execution time in the baseline workload.}
+    \label{fig:wl_distrib_cum}
+\end{figure*}
+
+\begin{figure*}[tbp]
+\centering
+
+% Top part of the figure
+\begin{subfigure}[t]{0.8\linewidth}
+    \centering
+    \includegraphics[clip,width=\linewidth,trim={0.1cm 8.1cm 0.1cm 0.75cm}]{figures/job_proportions.png}
+    \caption{Proportion of jobs.}
+    \label{fig:wl_distrib_runtime_size_top}
+\end{subfigure}
+
+\vspace{1em} % Add vertical space between subfigures
+
+% Bottom part of the figure
+\begin{subfigure}[t]{0.8\linewidth}
+    \centering
+    \includegraphics[clip,width=\linewidth,trim={0.1cm 0.1cm 0.1cm 7.75cm}]{figures/job_proportions.png}
+    \caption{Proportion of node-hours.}
+    \label{fig:wl_distrib_runtime_size_bottom}
+\end{subfigure}
+
+\caption{Job sizes in the baseline workload. The distribution is shown by the number of jobs (top) and number of node-hours (bottom), and the cumulative distribution is represented in grey.}
+\label{fig:wl_distrib_runtime_size}
+\end{figure*}
+
+\iffalse
+\begin{figure*}[tbp]
+\centering
+    \includegraphics[clip,width=0.8\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/job_proportions.png}
+    \caption{Job size in the baseline workload.
+    \small
+    The distribution is shown by the number of jobs (top) and number of node-hours (bottom), and the cumulative distribution is represented in grey.}
+    \label{fig:wl_distrib_runtime_size}
+\end{figure*}
+\begin{figure*}[tbp]
+    \includegraphics[clip,width=\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/distrib_job_size_big_wl.pdf}
+    \caption{Job size in the baseline workload.
+    %\small
+    The distribution is shown by the number of jobs (top) and number of node-hours (bottom), and the cumulative distribution is represented in grey.}
+    \label{fig:wl_distrib_runtime_size}
+\end{figure*}
+\fi
+
+\label{subsec:baseline}
+The baseline workload is adapted from the most recent available workload
+on the Parallel Workload Archive 
+KIT-FH2-2016\footnote{\url{https://www.cs.huji.ac.il/labs/parallel/workload/l_kit_fh2/index.html}} log, recorded from the ForHLR II system located at the Karlsruhe Institute of Technology in Germany. 
+Notice that this is the most recent workload publicly available and it is still a representative example of a general-purpose computational partition, unaffected by interference from deep learning jobs, better suited for accelerated partitions.
+To adapt the log to our testbed, we perform the following steps:
+
+\begin{enumerate}[wide]
+    \item The original infrastructure has two queues: 
+    the default queue with 1,152 20-core compute nodes, 
+    and the visualization queue with 21 nodes comprising CPUs and GPUs.
+    We focus on the first queue and exclude the GPU-enabled.
+
+    \item The record is 1.5 years long, and we only have two days of computation available in our testbed. Consequently, we decide to speed up the replay by \textbf{applying a time-scaling factor of 10}, i.e., execution times and inter-arrival times are divided by 10 in the replay\footnote{This factor was chosen to balance the tradeoff between replaying more days from the original workload and suffering from overheads of phenomena that we cannot speed up (like the time taken by scheduling decisions).}.
+    In this regard, we can replay $2\times10=20$ days from the original workload.
+
+    \item 
+    %\todo[inline]{SI@all: be careful with "burst" because that's not a limitation of our work and what does "good distribution" mean?} 
+    By studying the distribution of job submissions over time,
+    \mm{
+    we select as representative the month of July 2017 because it features
+    %is quite representative of the log:
+    a homogeneous volume of submissions over days,
+    well-distributed among users, and
+    the presence of the characteristic day/night and weekday/weekend patterns.}
+    %\st{no burst of submissions, presence of day/night and weekday/weekend patterns, and good distribution of submissions among the 68 users submitting in that period.}
+    As a result, we select for the experiments \textbf{the 19-day period from July \nth{3} to July \nth{21} (included), 2017}.
+
+    \item Finally, we \textbf{apply the user sampling method} described in Section~\ref{subsec:sampling}, 
+    with a target in average node-hour per day of $.84M$, 
+    where $M=124\times24$ is the maximum number of node-hour available per day in our testbed.
+\end{enumerate}
+
+The resulting workload contains 23 users.
+The median number of node-hours submitted per day is 2,272, i.e., 76\%  of the maximum capacity of the testbed.
+The average number of node-hours submitted per day is 2,496, i.e., 84\% of the maximum capacity of the testbed.
+Some characteristics of this workload are provided in the form of graphs.
+Figure~\ref{fig:wl_distrib_sub} displays the number of daily submissions and node-hours submitted per day. 
+Each color represents a particular user, and the stacked graphs show the submission volume per day.
+Figure~\ref{fig:wl_distrib_cum} shows the cumulative proportion of jobs as a function of their duration. It shows that a vast majority lasts less than one hour (slightly more than 60\%).
+Figure~\ref{fig:wl_distrib_runtime_size} shows the distribution of job execution times and job sizes. 
+Jobs are mainly requesting 1, 3, or 4 nodes (see Figure~\ref{fig:wl_distrib_runtime_size_top}). 
+But it also shows that large jobs (see 26, 30, and 32 nodes in the x-axis of Figure~\ref{fig:wl_distrib_runtime_size_bottom}), while rare, represent a significant part of the total executed mass.
+Since the jobs in the log have a fixed duration, the replayed jobs submitted to the cluster will allocate resources for the same period, either by using \texttt{sleep} commands or implementing active waits.
+
+\textbf{Warm-up Period.}
+Looking at Figure~\ref{fig:wl_distrib_sub_bottom}, we note that the first day of the workload, July \nth{3}, features high activity in node-hours submitted.
+This day, Monday, comes after a weekend of low activity on the platform. 
+However, it is not until 11:00 AM that the platform runs in nominal conditions.
+In other words, at that time, resources are virtually fully allocated, and there are pending jobs waiting for resources.
+We thus define this period as a ``warm-up'' in the experiments, 
+and malleable jobs start being submitted just after it ($t_0$ input of the \textit{generative user} described in Section~\ref{subsec:submitter}).
+
+\subsection{A Generative User: The PhD Student}
+\label{subsec:phdstudent}
+To thoroughly evaluate our methodology, we count on \sergio{an additional generative user to submit jobs on top of the baseline workload.}
+``The student'' is working with a simulation tool, particularly, a positive definite transport equation solver named MPDATA%
+\footnote{
+The MPDATA algorithm serves as the foundation of the EULAG multiscale fluid solver (Eulerian/semi-Lagrangian)~\cite{rojek_parallelization_2015}, which is responsible for calculating the advection of a non-diffusive quantity in a flow field.
+}.
+Its algorithm performs iterative time steps to simulate physical phenomena, requiring five input arrays and producing a single output array essential for subsequent time steps. 
+The malleable version of MPDATA\footnote{Code available at \url{https://gitlab.bsc.es/siserte/mpdata-dmr}.} redistributes the input arrays between source and target processes, respectively, the number of processes before and after a reconfiguration.
+MPDATA malleable demonstrated to increase the utilization of resources and reduce the power consumption in dynamic workloads~\cite{iserte_study_2020}.
+
+For her study, the student must run ten instances ($N$) of MPDATA sequentially.
+She will start launching jobs after the warm-up period and wait two scaled hours (720 actual seconds) before submitting the next job. 
+This think time ($\Delta t$) corresponds to a hypothetical analysis of the results and the preparation of the subsequent execution.
+
+The student is requested to complete her workload in 14 days; in other words, she has a deadline of two weeks to present her results.
+Since she is in a hurry, an alarm is triggered on her phone when a job finishes, and she immediately starts processing data and setting up the next job.
+
+MPDATA is configured with a computational domain of $8,192\times 1,024\times 128$ cells, iterating during 1,800 steps. 
+This computational domain enables the user to run MPDATA from $1$ to $64$ nodes.
+Figure~\ref{fig:mpdata-speedup} showcases the scalability of MPDATA with the given configuration in MN5.
+The application scales up to $16$ nodes linearly, from where it shows speedups lower than $2x$.
+
+\begin{figure*}[tbp]
+    \centering
+\includegraphics[clip,width=0.7\linewidth,trim={0.1cm 0.5cm 0.1cm 0.1cm}]{figures/mpdata.png}
+    \caption{MPDATA scalability in MN5.}
+    \label{fig:mpdata-speedup}
+\end{figure*}
+
+\begin{figure*}[tbp]
+    \centering
+    \includegraphics[clip,width=\linewidth,trim={0.5cm 0.25cm 0.1cm 0.2cm}]{figures/mpdata-reconf.png}
+    \caption{MPDATA reconfiguration times in MN5.}
+    \label{fig:mpdata-reconf}
+\end{figure*}
+
+\subsection{Experiments Definition}\label{subsubsec:exps}
+Five experiments have been designed to study and analyze the effect of job malleability and dynamic management of resources over an existing workload.
+\mm{Each experiment was launched on an independent 48-hour reservation of the 125-node testbed (see Section~\ref{subsec:testbed}).}
+\begin{figure*}[tbp]
+  \centering
+  %\small
+  \begin{minipage}{.6\linewidth}
+    \begin{algorithm}[H]
+    %\large
+        \caption{Reconfiguration Policy Algorithm in Slurm}
+        \label{alg:reconf_policy}
+        \begin{algorithmic}[1]
+            \STATE $\text{result} \gets \textsc{NONE}$
+            \STATE $\eta \gets \textsc{EvaluateMyParallelEfficiency}()$
+            \IF{$\textsc{JobCanBeInitiatedWithPartOfMyResources}()$}    
+                \IF{$\eta < 0.85$}
+                    \STATE $\textsc{SetMaximumPriorityToTargetPendingJob}()$
+                     \STATE $\text{result} \gets \textsc{SHRINK}$
+                \ENDIF
+            \ELSE
+                \STATE $\mathcal{R} \gets \textsc{ThereAreAvailableResources}()$
+                \IF{$\mathcal{R} \neq \emptyset$}
+                    \IF{$\eta > 0.10$}
+                        \STATE $\text{result} \gets \textsc{EXPAND}$
+                    \ENDIF
+                \ENDIF
+            \ENDIF
+            \STATE \textbf{return} $\text{result}$
+        \end{algorithmic}
+    \end{algorithm}
+  \end{minipage}
+\end{figure*}
+With these experiments, we will illustrate scenarios that represent different user behaviors:
+\begin{enumerate}[wide]
+    \item \textbf{Baseline}: this experiment corresponds to executing the baseline workload described in Section~\ref{subsec:baseline}. This experiment sets the original activity of the workload execution in the cluster.
+    \item \textbf{Static32}: this experiment executes sequentially over the baseline workload, the 10-job workload of the PhD student launched with 32 nodes each.
+    This is a realistic case, since with 32 nodes the execution time is $\approx14$ scaled hours (10x the actual time in Figure~\ref{fig:mpdata-speedup}). It means that she could finish her executions in less than six scaled days in an ideal scenario where jobs were not delayed.
+    \item \textbf{Static16}: this is another non-malleable experiment similar to \textit{Static32} but launching the jobs with 16 nodes, instead.
+    In this case, the student works with the shortest configuration time, the one within the 2x speedup in Figure~\ref{fig:mpdata-speedup}, which lasts $\approx18.5$ scaled hours.
+    Theoretically, she could complete her executions in less than eight scaled days.
+    We have discarded to configure a hypothetical \textit{Static8} experiment, since the theoretical time required to run the 10-job workload with eight nodes under ideal conditions is 47.5 scaled hours, while the maximum wall time granted for the experiment is 48 hours.
+    \item \textbf{AlwaysGrow}: in this experiment, the PhD student instantiates malleable jobs over the baseline workload. Jobs are submitted moldable, requesting a 1--64 range of nodes. 
+    Since she is under a tight deadline, she decides to disable shrinkages; jobs may only be expanded up to 64 nodes upon the RMS decision. By default, the reconfiguration policy will plan an expansion when sufficient resources are available to upscale.
+    Furthermore, the student has defined a reconfiguration inhibitor of \texttt{\#current\_nodes} iterations to avoid abuse of reconfiguration operations and reduce overhead generated by them (see Figure~\ref{fig:mpdata-reconf}).
+    \item \textbf{ParEfficiency}: in this case, jobs are submitted within the 2--64 nodes range.
+    Malleability limits are defined as one node at the minimum and 64 at the maximum.
+    However, the student configures an additional inhibitor for reconfigurations longer than 50 scaled minutes. 
+    According to Figure~\ref{fig:mpdata-reconf}, which depicts the measured reconfiguration time for all the possible node combinations of \textit{from--to} reconfigurations, those greater than five minutes are avoided, specifically the reconfigurations \textit{1 to 2}, \textit{2 to 1}, and \textit{4 to 1}.
+    This experiment leverages the performance-aware support of the dynamic resource manager (see Section~\ref{subsec:dmr}). 
+    Algorithm~\ref{alg:reconf_policy} depicts the reconfiguration policy.
+    Every time a malleable job triggers a reconfiguration, Slurm will determine the action that the DMRlib runtime must perform.
+    In this regard, Slurm's plugin will check if a pending job may be initiated with some of the resources that would be available if the malleable job relinquishes them after its shrinkage (line~3).
+    If a target job may be initiated, the policy checks the current parallel efficiency of the malleable job.
+    If the parallel efficiency does not reach a minimum threshold (line~4), the target job priority in the queue will be increased (line~5), and the malleable job will be shrunk (line~6).
+    If no job may be initiated and there are available resources in the cluster (line~10), the policy checks the current parallel efficiency. If the value exceeds a determined threshold (line~11), indicating that the execution may still leverage additional resources, the malleable job will be expanded (line~12).
+
+    This policy aims to obtain as many resources as possible if no other job in the queue may use them. However, suppose any job in the queue may be initiated, and the malleable job is not reasonably using the resources (within a parallel efficiency threshold). In that case, the RMS reassigns the resources to a pending job in order to increase global cluster productivity and efficiency.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results}
+\label{sec:results}
+In this section, the results obtained after running the experiments are analyzed.
+We use the following metrics for the validation of MPI malleability: resource allocation rate (Section~\ref{subsec:utilization}), makespan (Section~\ref{subsec:makespan}), and waiting time (Section~\ref{subsec:wt})%
+\footnote{
+Since the execution time is fixed and determined by the log, and the completion time is the sum of waiting plus execution times, the completion time is entirely dependent on the waiting time.
+}.
+
+Note that the metrics have different interpretations depending on the type of workload replay, as well-explained by Feitelson~\cite{feitelson_resampling_2021}.
+In the case of replay with feedback (like here with the PhD student workload),
+the primary performance metric is the makespan, 
+i.e., the total time to execute the workload.
+On the contrary, the makespan in timestamp-based replay (like here with the baseline workload)
+is dictated by the original submission timestamps.
+In this case, the primary performance metric is the waiting times for each job.
+
+\begin{figure*}[tbp]
+\centering
+    \includegraphics[clip, width=0.75\linewidth, trim={0.1cm 0.25cm 0.1cm 0.2cm}]{figures/Baseline.png}
+        \caption{
+    Resource allocation (Y-axis) in each second of the execution (X-axis) for the \textit{Baseline} experiment.}
+    \label{fig:baseline}
+\end{figure*}%
+
+\iffalse
+\begin{figure*}[tbp]
+    \centering
+    \begin{minipage}[b]{.4\textwidth}
+    \begin{subfigure}[t]{\columnwidth}
+        \centering
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 1.25cm 0.1cm 0.2cm}]{figures/StaticN32.png}
+        \caption{\textit{StaticN32}}
+        \label{multifig:static32}
+        \vspace{3mm}
+    \end{subfigure}
+    \begin{subfigure}[t]{\columnwidth}
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 0.3cm 0.1cm 0cm}]{figures/StaticN16.png}
+        \caption{\textit{StaticN16}}
+        \label{multifig:static16}
+    \end{subfigure}    
+    \caption{
+    Resource allocation (Y-axis) in each second of the execution (X-axis) for the \textit{student} \texttt{static} experiments. 32-node allocations are more difficult to fit, and the makespan increases.}
+    \end{minipage}\qquad
+    
+    \begin{minipage}[b]{.4\textwidth}
+    \begin{subfigure}[t]{\columnwidth}
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 1.25cm 0.1cm 0.2cm}]{figures/AlwaysGrow.png}
+        \caption{\textit{AlwaysGrow}}
+        \label{multifig:dyngrow}
+        \vspace{3mm}
+    \end{subfigure}
+    \begin{subfigure}[t]{\columnwidth}
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 0.3cm 0.1cm 0cm}]{figures/ParEfficiency.png}
+        \caption{\textit{ParEfficiency}}
+        \label{multifig:dynpe}
+    \end{subfigure}
+    \caption{
+    Resource allocation (Y-axis) in each second of the execution (X-axis) for the \textit{student} \texttt{dynamic} experiments. \textit{ParEfficiency} reduces the makespan.}
+    \end{minipage}
+\end{figure*}
+\fi
+
+\begin{figure*}[tbp]
+    \centering
+
+    \begin{subfigure}[t]{0.75\textwidth}
+        \centering
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 1.15cm 0.1cm 0.2cm}]{figures/StaticN32.png}
+        \caption{\textit{StaticN32}}
+        \label{multifig:static32}
+        \vspace{3mm}
+    \end{subfigure}
+
+    \begin{subfigure}[t]{0.75\textwidth}
+        \centering
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 0.1cm 0.1cm 0cm}]{figures/StaticN16.png}
+        \caption{\textit{StaticN16}}
+        \label{multifig:static16}
+    \end{subfigure}
+
+    \caption{
+    Resource allocation (Y-axis) over execution time (X-axis) for the \textit{student} \texttt{static} experiments. 32-node allocations are harder to fit, increasing makespan.}
+    \label{fig:static-experiments}
+\end{figure*}
+
+\begin{figure*}[tbp]
+    \centering
+
+    \begin{subfigure}[t]{0.75\textwidth}
+        \centering
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 1.15cm 0.1cm 0.2cm}]{figures/AlwaysGrow.png}
+        \caption{\textit{AlwaysGrow}}
+        \label{multifig:dyngrow}
+        \vspace{3mm}
+    \end{subfigure}
+
+    \begin{subfigure}[t]{0.75\textwidth}
+        \centering
+        \includegraphics[clip, width=\linewidth, trim={0.1cm 0.1cm 0.1cm 0cm}]{figures/ParEfficiency.png}
+        \caption{\textit{ParEfficiency}}
+        \label{multifig:dynpe}
+    \end{subfigure}
+
+    \caption{
+    Resource allocation (Y-axis) over execution time (X-axis) for the \textit{student} \texttt{dynamic} experiments. Dynamic policies, especially \textit{ParEfficiency}, reduce makespan.}
+    \label{fig:dynamic-experiments}
+\end{figure*}
+
+
+\begin{figure*}[tbp]
+    \centering
+    \includegraphics[clip,width=0.75\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/resourceAlloc.pdf}
+            \caption{Average percentage of allocated resources (Y-axis) for the five experiments (X-axis). \textit{ParEfficiency} has a more balanced resource allocation rate while reducing the makespan.}
+    \label{fig:resource_allocation}
+\end{figure*}
+
+\subsection{Resource Allocation Rate}\label{subsec:utilization}
+
+Figure~\ref{fig:baseline} showcases the total allocated nodes for every timestamp in the \textit{Baseline} experiment.
+Correspondingly, figures~\ref{multifig:static32},~\ref{multifig:static16},~\ref{multifig:dyngrow}, and~\ref{multifig:dynpe} showcase stacked bar plots where each timestamp depicts the sum of the allocated resources by the baseline plus the PhD student workloads.
+The figures present different patterns: while the static experiments 
+in figures~\ref{multifig:static32} and~\ref{multifig:static16} show how the student jobs have to wait for slots that satisfy the static requests, the malleable experiments in figures~\ref{multifig:dyngrow} and~\ref{multifig:dynpe} leverage fragmentation where student jobs run.
+
+Figure~\ref{fig:resource_allocation} gives the allocation rate for each experiment, which is the average node utilization over the makespan of the experiment, excluding the warm-up period.
+We observe that overlapping the PhD student workload to the baseline supposes an increase of around 7--10\% of the resource allocation.
+The figure shows that malleable experiments present a similar allocation rate to the static scenarios.
+This means that MPI malleability can maintain resource utilization while reducing the makespan of the PhD workload, as we will see in the following analyses.
+
+\subsection{Makespan}\label{subsec:makespan}
+Figure~\ref{fig:heatmap} displays the makespan for the different experiments.
+The right column is the makespan for the PhD workload only,
+whereas the left column is for both PhD and baseline workload.
+As a result, the left column also corresponds to the total experiment duration.
+
+As discussed in the introduction of this section, the left column is not meaningful, since makespan is dictated by the rigid submission timestamps replayed from the original log.
+This is why all the values in this column are similar to the \textit{Baseline} scenario.
+The only exception is \textit{StaticN32}, where the makespan is significantly increased compared to \textit{Baseline}.
+\textit{StaticN32}, as depicted in Figure~\ref{fig:baseline_waiting}, takes $6.27$ scaled hours more time than the baseline to finish
+due to a PhD job still running at the end of the experiment.
+
+More interesting is the right column of Figure~\ref{fig:heatmap}, representing the time the student needs to complete her workload.
+The student workload in \textit{StaticN32} is the longest because the scheduler cannot easily find a spot to fit the job and delays those large jobs.
+Compared to the static, we appreciate a non-negligible time reduction from part of the malleable workloads.
+Notably, the ``smartest'' dynamic experiment, \textit{ParEfficiency}, needs $\approx73\%$ the time to complete the student jobs compared to \textit{StaticN32}.
+%without delaying the baseline workload.
+
+\begin{figure*}[tbp]
+    \centering
+    \includegraphics[clip,width=0.6\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/heatmap.pdf}
+    \caption{Heatmap representing the makespan (s.) of experiments (Y-axis) and workloads (X-axis). \textit{ParEfficiency} completes the \textit{student} workload in 73\% of the \textit{StaticN32} time.}
+    \label{fig:heatmap}
+\end{figure*}
+
+\subsection{Waiting time}\label{subsec:wt}
+To analyze how baseline jobs are affected by the submission of extra jobs from the PhD student,
+we look at their mean waiting times in the different scenarios (Figure~\ref{fig:baseline_waiting}).
+% Particularly, Figure~\ref{fig:baseline_waiting} depicts the variations in the mean waiting times of the baseline jobs for all the experiments.
+It is patent that the original workload suffers longer delays on average when the PhD student jobs are submitted:
+the mean waiting time increases from 1,725s to 3,007s or 4,365s in the best and worst cases, respectively.
+Besides, the two dynamic experiments (\textit{AlwaysGrow} and \textit{ParEfficiency})
+pose a larger impact on the baseline waiting time. 
+This can be explained by the greedy nature of the malleability configurations,
+starting with fewer resources and expanding as resources are released in the platform,
+making the baseline jobs wait longer.
+
+\begin{figure*}[tbp]
+        \centering
+\includegraphics[clip,width=0.75\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/base-waiting.pdf}
+        \caption{Average waiting time of the baseline jobs (Y-axis) for the five experiments (X-axis). \texttt{Dynamic} experiments need more time to fit queued jobs in favor of the makespan.}
+        \label{fig:baseline_waiting}
+\end{figure*}
+
+In a finer detailed analysis, we studied the accumulated waiting time throughout the execution (Figure~\ref{fig:waitAcc}).
+It shows how the waiting time increases as new jobs arrive in the queue, and since there are not enough available resources until around timestamp 77,000 (July \nth{10}), they cannot be quickly started.
+After this milestone, the waiting time progressively starts growing again. 
+More specifically, Figure~\ref{fig:waitDiff} showcases the waiting time difference of the various experiments compared to the Baseline for each job.
+One of the most valuable insights we extract is the behavior detected around job $750$ (July \nth{10}), where waiting times drop.
+This is because there is a period around July \nth{8} and \nth{9}, as shown in Figure~\ref{fig:wl_distrib_sub_top}, where the submissions drastically decrease, and it takes over a day to drain the queue.
+That is why jobs submitted after that event present a virtually null waiting time.
+
+%Figure~\ref{fig:waitFreq} counts the number of jobs for different waiting time groups.
+%Although the vast majority of jobs are in the first three bins, non-baseline experiments feature a higher share of jobs in the longer waiting time bins.
+%Among them, dynamic jobs are more common in the middle and appear minimally on the right side of the histogram.
+
+\begin{figure*}[tbp]
+    \centering
+    \begin{overpic}[clip,width=0.8\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitAcc.pdf}
+        % Draw a vertical line at the desired X position (percentage of width)
+        \put(50,4){\color{gray}\line(0,1){60}} % Vertical line
+        % Add text next to the line (adjust 52 and 50 for position)
+        \put(40,18){\color{gray}\small July \nth{10}} % Text next to the line
+    \end{overpic}
+    \caption{Accumulated waiting time throughout the workloads executions.}% The red line points out a change in the submission rate.}
+    \label{fig:waitAcc}
+\end{figure*}
+
+\begin{figure*}[tbp]
+    \centering
+    \begin{overpic}[clip,width=0.8\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitDiff.pdf}
+        % Draw a vertical line at the desired X position (percentage of width)
+        \put(45.8,4){\color{gray}\line(0,1){67}} % Vertical line
+        % Add text next to the line (adjust 52 and 50 for position)
+        \put(48,57){\color{gray}\small July \nth{10}} % Text next to the line
+    \end{overpic}
+    \caption{Difference in job waiting times compared to the baseline experiment.} %The red line points out a change in the submission rate.}
+    \label{fig:waitDiff}
+\end{figure*}
+
+\iffalse
+\begin{figure*}[tbp]
+    \centering
+    \includegraphics[clip,width=0.7\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitFreq.png}
+    \caption{Job counting grouped by waiting time.}
+    \label{fig:waitFreq}
+\end{figure*}
+\fi
+
+\subsection{Focus on the PhD Student}
+Figure~\ref{fig:phd_completion} illustrates the mean completion time of the student's jobs.
+The completion time is composed of the sum of the waiting time and the execution time. 
+The malleable experiments present a higher execution time compared to their static counterpart.
+This is because malleable jobs are likely to be initiated with fewer resources.
+Then, dynamic jobs are progressively expanded following their respective reconfiguration policies.
+The more resources assigned to the jobs, the lower the execution time (see Figure~\ref{fig:mpdata-speedup}). 
+However, reconfigurations come with a cost (see Figure~\ref{fig:mpdata-reconf}), and this cost is included in the execution time.
+
+\begin{figure*}[tbp]
+    \centering
+        \includegraphics[clip,width=0.75\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/phd-stacked.pdf}
+        \caption{Mean student's job completion (waiting + execution) time (Y-axis) for the four experiments (X-axis). \textit{Student} jobs barely wait in the \texttt{Dynamic} experiments.}
+        \label{fig:phd_completion}
+\end{figure*}
+\iffalse
+\begin{figure}[tbp]
+        \includegraphics[clip,width=0.999\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/node-hours.pdf}
+        \caption{Individual student job's Node-hours (Y-axis) grouped by colors for the four experiments (X-axis). Dashed lines represent the mean per experiment (Y-axis).}
+        \label{fig:phd_nodehours}
+\end{figure}
+\fi
+\begin{figure*}[tbp]
+        \includegraphics[clip,width=\linewidth,trim={0.2cm 0.1cm 0.2cm 0.1cm}]{figures/node-hours3.png}
+        \caption{Individual student job's Node-hours (Y-axis) grouped by colors for the four experiments (X-axis). Dashed lines represent the mean per experiment (Y-axis).}
+        \label{fig:phd_nodehours}
+\end{figure*}
+
+The total cost of reconfigurations in our case is given in Table~\ref{tab:reconfig}.
+% contains the data related to the reconfigurations.
+%For each experiment (first column), we find the number of reconfigurations (second column) in the format \textit{expansions + shrinkages}, the mean time of those reconfigurations (third column), and the total overhead generated by the reconfigurations (fourth column).
+\begin{table*}[tbp]
+\centering
+\fontsize{9.5}{14pt}\selectfont
+\begin{tabular}{lccc}
+\toprule
+ & \textbf{\#} & \textbf{Mean Time} & \textbf{Overhead} \\
+\midrule
+AlwaysGrow & 27+0 & 160 s. & 4,332 s. \\
+ParEfficiency & 18+7 & 77 s. & 1,929 s. \\
+\bottomrule
+\end{tabular}
+\caption{Per experiment (first column) we find the number of reconfigurations in format \textit{expansions + shrinkages} (second column), reconfiguration mean time (third column), and reconfiguration overhead (fourth column).
+}
+\label{tab:reconfig}
+\end{table*}
+In \textit{ParEfficiency}, the overhead is reduced thanks to preventing the slowest reconfigurations.
+Furthermore, since the malleable jobs are adapted to the workload and the performance, there are seven \textit{32 to 16}-node shrinkages to increase productivity by reducing the student workload time by 10\% compared to \textit{AlwaysGrow}.
+
+If we pay attention to the node-hours consumed by the PhD Student jobs, Figure~\ref{fig:phd_nodehours} shows that metric for each of those jobs in the experiments. 
+Furthermore, a dashed line represents the PhD student jobs mean node-hour per experiment.
+
+Static jobs present a virtually constant node-hour consumption (standard deviation $<$ $1$). 
+As shown in Figure~\ref{fig:mpdata-speedup}, the PhD jobs deliver lower speedup running on 32 than in 16 nodes, $1.41x$ and $1.86x$, respectively.
+For this reason, the consumption is 17 node-hours higher in the \textit{StaticN32} experiment.
+Regarding MPI malleability, since those jobs can be resized, they show variable node hours within the experiments (standard deviation $>$ $4$).
+Remarkably, \textit{AlwaysGrow} and \textit{ParEfficiency} contain the two ``cheapest'' jobs because they run most, or the whole of their time, respectively, in 8 nodes. It is with eight nodes that the maximum performance is attained.
+
+\section{Discussion}\label{sec:discussion}
+Our methodology adapts historical workload traces to a target infrastructure, accounting for the fact that reproducing logs on the same system is often not feasible. The goal is to provide a realistic path for gradual DRM adoption in HPC centers.
+
+We do not expect full adoption of DRM techniques to happen immediately. Instead, early adopters (technically skilled users motivated to exploit malleability) would be the first to submit DRM-enabled jobs to production environments still dominated by fixed-size workloads. This hybrid workload composition enables us to assess the incremental benefits of malleability without needing full-scale user migration.
+
+This setup also offers valuable insight into how malleable jobs can coexist with standard jobs and make use of fragmented resources that would otherwise go idle. Running our experiments on a real Slurm deployment allowed us to combine malleability with Slurm’s native backfilling policy, improving resource utilization.
+
+While the number of test scenarios is limited by the need for live system execution, our methodology produces high-fidelity results. Moreover, it can be reused by organizations with their own workload traces, enabling site-specific evaluation of malleability’s practical benefits and deployment challenges.
+
+We argue that our method is more robust than many alternatives commonly used in the literature (see Section~\ref{sec:related}). We (i) use a real workload trace rather than synthetic jobs, and (ii) right-size the workload by randomly sampling users, which preserves authentic submission and temporal patterns.
+
+The 84\% baseline utilization target reflects highly loaded workloads in the Parallel Workload Archive, representative of real production environments. We further increased total utilization to 90\% when adding the PhD workload, which remains realistic for many production clusters. 
+
+\begin{table*}[tbp]
+    \centering
+    \fontsize{9.5pt}{20pt}\selectfont
+    \begin{tabular}{lcccc}
+        \toprule
+        & \textbf{StaticN32} & \textbf{StaticN16} & \textbf{AlwaysGrow} & \textbf{ParEfficiency} \\
+        \midrule
+        \textbf{Total}    & 232.83 n/day (100\%)  & 200.54 n/day (100\%)  & 189.09 n/day (100\%)  & 171.52 n/day (100\%)  \\
+        \textbf{Baseline} & 193.5 n/day (83.11\%) & 173.7 n/day (86.62\%) & 164.2 n/day (86.84\%) & 145.68 n/day (84.93\%) \\
+        \textbf{Student}  & 23.95 n/day (10.29\%) & 17.4 n/day (8.68\%)   & 20.01 n/day (10.58\%) & 18.25 n/day (10.64\%)  \\
+        \textbf{Accumulated} & 217.45 n/day (93.39\%)& 191.1 n/day (95.29\%) & 184.21 n/day (97.42\%)& 163.93 n/day (95.57\%) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Resource consumption (nodes/day) and its total percentage during the student's activity for the different experiments.}
+    \label{tab:nodes-day}
+\end{table*}
+
+At the end of the day, the PhD student successfully meets the deadline in the \textit{ParEfficiency} scenario. Counterintuitively, large fixed resource requests, which users might assume to be beneficial, actually work against minimizing completion time. Additionally, overly aggressive malleable strategies can introduce excessive reconfiguration overhead, limiting their ability to efficiently leverage resource fragmentation.  
+
+Fragmented resource availability, a common characteristic of HPC infrastructures, represents the ideal use case where malleability becomes crucial. 
+This fragmentation is what our student leverages.
+Table~\ref{tab:nodes-day} focuses on the time period during which the student is actively running jobs (corresponding to the red areas in figures~\ref{multifig:static32},~\ref{multifig:static16},~\ref{multifig:dyngrow}, and~\ref{multifig:dynpe}). The table presents the resource consumption in \textit{nodes/day} for the workloads, along with their proportion of the total available area ($124$ nodes $\times$ time) shown in the first row.  
+
+The data highlights an interesting trade-off. Although the most cost-effective strategy for the student is \textit{StaticN16} (third row), it does not only allow meeting the deadline but also results in increased costs for the baseline workload (second row) and higher overall cluster resource consumption during that period (fourth row), compared to the optimal \textit{ParEfficiency}.
+
+Given these findings, users who contribute to higher infrastructure efficiency by running \textit{parallel-efficiency-aware malleable jobs}—which increase resource utilization without extending job execution times—could be incentivized. One possible approach would be to award a reduction in their usage quota proportional to their efficiency gains, encouraging broader adoption of malleability in HPC environments.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}\label{sec:conclusion}
+In this work, we have introduced a novel methodology to validate dynamic resource management techniques by adapting supercomputer logs to DRM-enabled computing clusters.
+Unlike previous studies that relied on benchmarks or simulations with synthetic workloads, we employ a novel methodology called \textit{User-Based Submitter} that combines user sampling and workload replay with feedback.
+By leveraging real-world data and testing on an MPI malleability-enabled supercomputer's partition, we provide a realistic and actionable framework for evaluating new resource management and job scheduling policies.
+
+We have demonstrated its effectiveness through a novel use case in which an HPC user pioneered the use of MPI malleability to complete her workload on time. Our validation confirms the benefits of malleability in a supercomputer environment, showing that the malleable workload time was reduced by 27\% without delaying the baseline workload while increasing overall resource utilization by 8\%. We believe that our methodology can be broadly applied and represents a promising step toward promoting DRM mechanisms in next-generation HPC infrastructures.
+
+%\section*{Acknowledgments}
+
+\section*{CRediT authorship contribution statement}
+\textbf{Sergio Iserte:} Conceptualization, Methodology, Software,
+Investigation, Writing - Original Draft, Visualization, Project administration.
+\textbf{Maël Madon:}  Methodology, Investigation, Software, Writing - Original Draft, Visualization.
+\textbf{Georges Da Costa:} Investigation, Writing - Review \& Editing, Supervision.
+\textbf{Jean-Marc Pierson:} Investigation, Writing - Review \& Editing, Supervision.
+\textbf{Antonio J. Peña:} Resources, Writing - Review \& Editing, Supervision, Funding acquisition.
+% https://www.elsevier.com/researcher/author/policies-and-guidelines/credit-author-statement
+
+\section*{Declaration of competing interest}
+The authors have no conflicts of interest to declare that are relevant to the content of this article.
+
+\section*{Funding sources}
+The researchers from BSC are involved in the project The European PILOT, which has received funding from the European High-Performance Computing Joint Undertaking (JU) under grant agreements No. 101034126 and No. PCI2021-122090-2A under the MCIN/AEI and the EU NextGenerationEU/PRTR.
+They are also grateful for the support from the Department of Research and Universities of the Government of Catalonia to the AccMem (Code: 2021 SGR 00807).
+Antonio J. Peña was partially supported by the Ramón y Cajal fellowship RYC2020-030054-I funded by MCIN/AEI/ 10.13039/501100011033 and by ``ESF Investing in your future''.
+%Generative AI tools were utilized to assist in the generation of sections of this work, including text and scripts for plotting the charts.
+
+\section*{Data availability}
+The artifact source-code can be cloned from GitHub: \url{https://github.com/siserte/dmr-poc}.
+
+\section*{Declaration of generative AI and AI-assisted technologies in the writing process}
+During the preparation of this work the authors used ChatGPT in order to improve language and readability. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.
+
+\bibliographystyle{elsarticle-num}
+\bibliography{bib}
+
+\end{document}
+
