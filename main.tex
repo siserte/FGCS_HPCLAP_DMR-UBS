@@ -183,7 +183,7 @@ Closely related to malleability is the concept of moldability. While malleabilit
 In this regard, jobs specify a range of sizes, allowing the job scheduler to choose the most suitable configuration based on current system availability and load.
 This approach provides an extra degree of flexibility by enabling better resource allocation at job scheduling time, which can lead to improved system efficiency and potentially shorter wait times for job initiation. However, unlike malleable applications, moldable applications do not adjust their resource usage dynamically during runtime.
 
-Surveys in ~\cite{aliaga_survey_2022, Tarraf_malleability_2024} extesively review the state--of--the--art of malleability in HPC systems. Instead, we focus on how malleability frameworks and actual RMSs have been evaluated with workloads to demonstrate the usefulness of DRM in clusters.
+Surveys in ~\cite{aliaga_survey_2022, Tarraf_malleability_2024} extensively review the state--of--the--art of malleability in HPC systems. Instead, we focus on how malleability frameworks and actual RMSs have been evaluated with workloads to demonstrate the usefulness of DRM in clusters.
 
 ReSHAPE is a coupled solution for adaptive workloads, including its specific reconfiguration libraries, scheduler, and runtime system.
 This strong integration forces ReSHAPE users to develop applications that are compatible with this system.
@@ -194,7 +194,7 @@ PARM (acronym of Power-Aware Resource Manager) relies on over-provisioning, powe
 PARM is evaluated in a 38-node cluster with a 5-job workload comprising the benchmarks and applications Wave2D, Jacobi2D, LeanMD, Lulesh, and AMR.
 Larger experiments relied on the Slurm simulator with a log of 68,936 jobs submitted to a 40,960-node cluster. The authors assume that all the jobs in the workload are malleable and assign them random scalability from a set of samples.
 
-The solution developed by Prabhakaran et al. combines AMPI (based on CHARM++) with the RMS Torque/Maui to tackle malleable jobs~\cite{sarood_maximizing_2014}. 
+The solution developed by Prabhakaran et al. combines AMPI (based on CHARM++) with the RMS Torque/Maui to tackle malleable jobs~\cite{prabhakaran_batch_2015}. 
 The authors evaluate in a 15-node cluster a workload based on a modified version of the ESP benchmark to contain various percentages of rigid, malleable, and evolving jobs composed of 230 instances.
 While the rigid jobs followed the benchmark directives, the flexible jobs were a malleable version of LeanMD and an evolving implementation of the synthetic Quadflow.
 
@@ -246,7 +246,7 @@ To study the effects of DRM on top of the baseline workload, the submitter inclu
 \subsection{User-Based Workload Submitter}
 \label{subsec:submitter}
 
-The core of the experiments presented in this paper relies on a piece of software running throughout the whole experiment duration: the User-Based Submitter (UBS)\footnote{Code available at \url{https://gitlab.irit.fr/sepia/coop/replay-on-rjms/poc}}.
+The core of the experiments presented in this paper relies on a piece of software running throughout the whole experiment duration: the User-Based Submitter (UBS)\footnote{Code available at \url{https://gitlab.bsc.es/siserte/ubs}}.%https://gitlab.irit.fr/sepia/coop/replay-on-rjms/poc}}.
 UBS reproduces HPC users issuing job submissions to the Slurm resource manager at certain timestamps.
 %\todo{Maël@IRIT: make an illustration?}
 % the two types of users, the UBS, submitting jobs to SLURM
@@ -348,7 +348,7 @@ Figure~\ref{fig:dmr-slurm} depicts the operation of dynamic resource management 
 \begin{itemize}
 \item During execution, jobs periodically expose their readiness for reconfiguration to the RMS.
 \item This communication occurs at a synchronization point specified in the code, where the reconfiguration process may commence. In iterative applications, the end of an iteration often serves as an ideal synchronization point.
-\item The RMS, with its cluster-wise information and the performance metrics provided by a monitor, determines reconfiguration actions folowing its defined policies, and informs the PDR.
+\item The RMS, with its cluster-wise information and the performance metrics provided by a monitor, determines reconfiguration actions following its defined policies, and informs the PDR.
 \item If this results in a change to the job size, the RMS reallocates resources and returns the new number of processes, which may involve either expanding or shrinking the job.
 \item Finally, the PDR redistributes the data among the processes according to the application's guidelines, allowing jobs to continue execution with the new process layout from the point where the reconfiguration was triggered.
 \end{itemize}
@@ -667,6 +667,7 @@ In this case, the primary performance metric is the waiting times for each job.
     Resource allocation (Y-axis) in each second of the execution (X-axis) for the \textit{Baseline} experiment.}
     \label{fig:baseline}
 \end{figure*}%
+
 
 \iffalse
 \begin{figure*}[tbp]
