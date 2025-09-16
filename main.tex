@@ -50,6 +50,7 @@
 \newcommand{\blindtext}[1]{\textbf{$<<$Text hidden for blind review$>>$}}
 \newcommand{\sergio}[1]{\textcolor{black}{#1}}
 \newcommand{\mm}[1]{\textcolor{black}{#1}}
+\newcommand{\review}[1]{\textcolor{blue}{#1}}
 
 \usepackage[percent]{overpic}
 \usepackage[super]{nth}
@@ -383,17 +384,17 @@ The nodes of this partition are based on Intel Sapphire Rapids (4\textsuperscrip
 The nodes are interconnected through a 100~Gbit/s ConnectX-7 NDR200 InfiniBand network.
 
 Regarding the software stack, the executions rely on the GCC-10.4 compiler, the MPICH-3.2 MPI implementation, and a customized version of Slurm to support malleability included in the dynamic resource management framework DMRlib. 
-%In turn, DMR-API is configured with the DMRlib reconfiguration engine to enable process layout reshaping~\cite{Iserte2020} and with TALP to monitor the parallel efficiency and react based on it (see Section~\ref{subsec:dmr}).
-Slurm is deployed using a node running its controller daemon, while the remaining nodes act as compute nodes. 
-Slurm is configured with \texttt{sched/backfill} and \texttt{priority/multifactor} policies.
-
-To perform these experiments, we have enabled the Slurm job epilog mechanism to communicate job completions to the job submitter UBS described in Section~\ref{subsec:submitter}.
-Furthermore, we have leveraged a Slurm resource selection plugin that supports malleability~\cite{iserte_dmrlib_2020}. 
-In this regard, every time a malleable job triggers a reconfiguration, Slurm will determine the action that the runtime must perform, which may be \textit{expand}, \textit{shrink}, or \textit{none}. This Slurm plugin is based on \texttt{select/linear}, and its algorithm is explained in Section~\ref{subsubsec:exps}.
-%\sergio{Notice that this configuration and that related to the dynamic policies (Section~\ref{subsubsec:exps}) is defined once per experiment by the administrator for the whole system and is not altered on--the--fly.}
-
-The experiments are scoped within 125 nodes for up to 48 hours, which are the limits of our available submission queue. %\blindtext{default QoS of the BSC researchers in MN5}.
-Notice that a node from the allocation acts as the controller and the remaining 124 as actual compute nodes.
+\review{The malleability-enabled Slurm version used in this work is based on Slurm-17.02.0-0pre1 and extends its functionality through a resource selection plugin that supports malleability. The plugin builds upon the \texttt{select/linear} resource selection policy and remains fully compatible with Slurm’s native support for moldability. An extensive evaluation of this plugin, considering workloads with varying proportions of moldable and malleable jobs, is presented in~\cite{iserte_dmrlib_2020}.
+That work concludes that moldability is not enough to reap the benefits of dynamic resource management, and malleability is required to achieve significant improvements in resource utilization and job throughput.
+\\
+In the current work, we have extended that plugin with performance metrics from TALP to drive malleability decisions as explained in Section~\ref{subsubsec:exps}.
+For this reason, every time a malleable job triggers a reconfiguration, Slurm will determine the action that the runtime must perform, which may be \textit{expand}, \textit{shrink}, or \textit{none}. 
+Notice that it is out of the scope of this work evaluate scheduling or priority policies, thus, Slurm is configured with \review{the default parameters of the} \texttt{sched/backfill} and \texttt{priority/multifactor} policies.
+We have also enabled the Slurm job epilog mechanism to communicate job completions to the job submitter UBS described in Section~\ref{subsec:submitter}.
+\\
+The experiments are scoped within 125 nodes for up to 48 hours, which are the limits of the default QoS of the BSC researchers in MN5.
+Slurm is deployed using a node running its controller daemon, while the remaining 124 nodes act as actual compute nodes.
+}
 
 \subsection{Traditional Users: The Baseline Workload}
 
