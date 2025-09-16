@@ -54,6 +54,7 @@
 
 \usepackage[percent]{overpic}
 \usepackage[super]{nth}
+\usepackage{pdfpages}
 
 \DeclareUnicodeCharacter{2009}{\,}
 
@@ -620,9 +621,9 @@ Five experiments have been designed to study and analyze the effect of job malle
 With these experiments, we will illustrate scenarios that represent different user behaviors:
 \begin{enumerate}[wide]
     \item \textbf{Baseline}: this experiment corresponds to executing the baseline workload described in Section~\ref{subsec:baseline}. This experiment sets the original activity of the workload execution in the cluster.
-    \item \textbf{Static32}: this experiment executes sequentially over the baseline workload, the 10-job workload of the PhD student launched with 32 nodes each.
+    \item \textbf{StaticN32}: this experiment executes sequentially over the baseline workload, the 10-job workload of the PhD student launched with 32 nodes each.
     This is a realistic case, since with 32 nodes the execution time is $\approx14$ scaled hours (10x the actual time in Figure~\ref{fig:mpdata-speedup}). It means that she could finish her executions in less than six scaled days in an ideal scenario where jobs were not delayed.
-    \item \textbf{Static16}: this is another non-malleable experiment similar to \textit{Static32} but launching the jobs with 16 nodes, instead.
+    \item \textbf{StaticN16}: this is another non-malleable experiment similar to \textit{Static32} but launching the jobs with 16 nodes, instead.
     In this case, the student works with the shortest configuration time, the one within the 2x speedup in Figure~\ref{fig:mpdata-speedup}, which lasts $\approx18.5$ scaled hours.
     Theoretically, she could complete her executions in less than eight scaled days.
     We have discarded to configure a hypothetical \textit{Static8} experiment, since the theoretical time required to run the 10-job workload with eight nodes under ideal conditions is 47.5 scaled hours, while the maximum wall time granted for the experiment is 48 hours.
@@ -754,14 +755,6 @@ In this case, the primary performance metric is the waiting times for each job.
     \label{fig:dynamic-experiments}
 \end{figure*}
 
-
-\begin{figure*}[tbp]
-    \centering
-    \includegraphics[clip,width=0.75\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/resourceAlloc.pdf}
-            \caption{Average percentage of allocated resources (Y-axis) for the five experiments (X-axis). \textit{ParEfficiency} has a more balanced resource allocation rate while reducing the makespan.}
-    \label{fig:resource_allocation}
-\end{figure*}
-
 \subsection{Resource Allocation Rate}\label{subsec:utilization}
 
 Figure~\ref{fig:baseline} showcases the total allocated nodes for every timestamp in the \textit{Baseline} experiment.
@@ -799,6 +792,7 @@ Notably, the ``smartest'' dynamic experiment, \textit{ParEfficiency}, needs $\ap
     \label{fig:heatmap}
 \end{figure*}
 
+
 \subsection{Waiting time}\label{subsec:wt}
 To analyze how baseline jobs are affected by the submission of extra jobs from the PhD student,
 we look at their mean waiting times in the different scenarios (Figure~\ref{fig:baseline_waiting}).
@@ -811,12 +805,40 @@ This can be explained by the greedy nature of the malleability configurations,
 starting with fewer resources and expanding as resources are released in the platform,
 making the baseline jobs wait longer.
 
+\iffalse
+\begin{figure*}[tbp]
+    \centering
+    \includegraphics[clip,width=0.75\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/resourceAlloc.pdf}
+            \caption{Average percentage of allocated resources (Y-axis) for the five experiments (X-axis). \textit{ParEfficiency} has a more balanced resource allocation rate while reducing the makespan.}
+    \label{fig:resource_allocation}
+\end{figure*}
+
 \begin{figure*}[tbp]
         \centering
 \includegraphics[clip,width=0.75\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/base-waiting.pdf}
         \caption{Average waiting time of the baseline jobs (Y-axis) for the five experiments (X-axis). \texttt{Dynamic} experiments need more time to fit queued jobs in favor of the makespan.}
         \label{fig:baseline_waiting}
 \end{figure*}
+\fi
+
+\begin{table*}[htbp]
+    \centering
+    \begin{tabular}{lcccccc}
+        \toprule
+         & Baseline & StaticN32 & StaticN16 & AlwaysGrow & ParEfficiency \\
+        \midrule
+        \multirow{2}{*}{Global Resource Allocation} 
+            & Average & 83.70\% & 93.86\% & 91.50\% & 92.63\% & 91.86\% \\
+            & Std     & 24.07\% & 11.44\5 & 17.62\% & 17.24\% & 17.16\% \\
+        \midrule
+        \multirow{2}{*}{Actual Waiting Time} 
+            & Average & 1,725.04 s.    & 3,007.24 s.     & 3,290.38 s.    & 4,365.89 s.     & 4,242.71 s. \\
+            & Std     & 4,450.38 s.    & 6,197.19  s.    & 7,677.89 s.    & 10,013.08 s.    & 11,690.31 s.    \\
+        \bottomrule
+    \end{tabular}
+    \caption{Average and standard deviation of allocated resources and waiting time for the five experiments.}
+    \label{tab:alloc-wait}
+\end{table*}
 
 In a finer detailed analysis, we studied the accumulated waiting time throughout the execution (Figure~\ref{fig:waitAcc}).
 It shows how the waiting time increases as new jobs arrive in the queue, and since there are not enough available resources until around timestamp 77,000 (July \nth{10}), they cannot be quickly started.
@@ -832,11 +854,11 @@ That is why jobs submitted after that event present a virtually null waiting tim
 
 \begin{figure*}[tbp]
     \centering
-    \begin{overpic}[clip,width=0.8\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitAcc.pdf}
+    \begin{overpic}[clip,width=0.95\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitAcc.png}
         % Draw a vertical line at the desired X position (percentage of width)
-        \put(50,4){\color{gray}\line(0,1){60}} % Vertical line
+        \put(48.4,4){\color{gray}\line(0,1){26}} % Vertical line
         % Add text next to the line (adjust 52 and 50 for position)
-        \put(40,18){\color{gray}\small July \nth{10}} % Text next to the line
+        \put(49.5,18){\color{gray}\small July \nth{10}} % Text next to the line
     \end{overpic}
     \caption{Accumulated waiting time throughout the workloads executions.}% The red line points out a change in the submission rate.}
     \label{fig:waitAcc}
@@ -844,11 +866,11 @@ That is why jobs submitted after that event present a virtually null waiting tim
 
 \begin{figure*}[tbp]
     \centering
-    \begin{overpic}[clip,width=0.8\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitDiff.pdf}
+    \begin{overpic}[clip,width=0.95\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitDiff.png}
         % Draw a vertical line at the desired X position (percentage of width)
-        \put(45.8,4){\color{gray}\line(0,1){67}} % Vertical line
+        \put(44.8,4){\color{gray}\line(0,1){29}} % Vertical line
         % Add text next to the line (adjust 52 and 50 for position)
-        \put(48,57){\color{gray}\small July \nth{10}} % Text next to the line
+        \put(45.8,24){\color{gray}\small July \nth{10}} % Text next to the line
     \end{overpic}
     \caption{Difference in job waiting times compared to the baseline experiment.} %The red line points out a change in the submission rate.}
     \label{fig:waitDiff}
@@ -878,15 +900,9 @@ However, reconfigurations come with a cost (see Figure~\ref{fig:mpdata-reconf}),
         \caption{Mean student's job completion (waiting + execution) time (Y-axis) for the four experiments (X-axis). \textit{Student} jobs barely wait in the \texttt{Dynamic} experiments.}
         \label{fig:phd_completion}
 \end{figure*}
-\iffalse
-\begin{figure}[tbp]
-        \includegraphics[clip,width=0.999\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/node-hours.pdf}
-        \caption{Individual student job's Node-hours (Y-axis) grouped by colors for the four experiments (X-axis). Dashed lines represent the mean per experiment (Y-axis).}
-        \label{fig:phd_nodehours}
-\end{figure}
-\fi
+
 \begin{figure*}[tbp]
-        \includegraphics[clip,width=\linewidth,trim={0.2cm 0.1cm 0.2cm 0.1cm}]{figures/node-hours3.png}
+        \includegraphics[clip,width=0.9\linewidth,trim={0.2cm 0.1cm 0.2cm 0.1cm}]{figures/node-hours3.png}
         \caption{Individual student job's Node-hours (Y-axis) grouped by colors for the four experiments (X-axis). Dashed lines represent the mean per experiment (Y-axis).}
         \label{fig:phd_nodehours}
 \end{figure*}
@@ -997,6 +1013,8 @@ During the preparation of this work the authors used ChatGPT in order to improve
 
 \bibliographystyle{elsarticle-num}
 \bibliography{bib}
+
+\includepdf[pages=-]{artifact.pdf}
 
 \end{document}
 
