@@ -678,7 +678,7 @@ In this case, the primary performance metric is the waiting times for each job.
             & \textbf{Std}     & 4,450.38 s.    & 6,197.19  s.    & 7,677.89 s.    & 10,013.08 s.    & 11,690.31 s.        \\
         \bottomrule
     \end{tabular}
-    \caption{Workloads makespan and average and standard deviation of allocated resources and waiting time for the five experiments.}
+    \caption{Workloads makespan and average and standard deviation of allocated resources and waiting time for the five experiments, excluding the warm-up period.}
     \label{tab:alloc-wait}
 \end{table*}
 
@@ -710,8 +710,8 @@ Of course, reducing the PhD student jobs size from 32 to 16 nodes helps the back
 However, it is not enough to meet the student's deadline of 14 scaled days.
 Figure~\ref{multifig:static16} shows that the last two jobs of the student are still running after the deadline.
 \textit{AlwaysGrow}, leverages malleability to reduce the student makespan, but it still needs 36.62 actual hours, which is still beyond the deadline (see Figure~\ref{multifig:dyngrow}).
-Notably, the ``smartest'' dynamic configuration, \textit{ParEfficiency}, needs $\approx73\%$ the time to complete the student jobs compared to \textit{StaticN32} without delaying the baseline workload and meeting the deadline.
-Figure~\ref{multifig:dynpe} shows that the last job of the student finishes before the deadline.
+Notably, the ``smartest'' dynamic configuration, \textit{ParEfficiency}, needs $\approx73\%$ the time to complete the student jobs compared to \textit{StaticN32} (32.88 h. vs 45.15 h., respectively) without delaying the baseline workload and meeting the deadline, since both full workloads are completed in 44.84 h.
+To sum up, Figure~\ref{multifig:dynpe} shows that the last job of the student finishes before the deadline in \textit{ParEfficiency} scenario.
 \\\indent
 In the following subsections, we will see how malleability affects the resource allocation rate and the waiting time, which are the two factors that explain the makespan reduction of the PhD student workload.
 }
@@ -863,30 +863,38 @@ That is why jobs submitted after that event present a virtually null waiting tim
 \end{figure*}
 
 \subsection{Focus on the PhD Student}
-Figure~\ref{fig:phd_completion} illustrates the mean completion time of the student's jobs.
+Figure~\ref{fig:phd_completion} illustrates the average completion time of the student's jobs.
 The completion time is composed of the sum of the waiting time and the execution time. 
 The malleable experiments present a higher execution time compared to their static counterpart.
-This is because malleable jobs are likely to be initiated with fewer resources.
-Then, dynamic jobs are progressively expanded following their respective reconfiguration policies.
+\review{
+This is because malleable jobs are likely to be initiated with fewer resources, because they are submitted with a range of nodes, and the RMS will assign them the minimum available resources at that time benefiting from backfilling.
+For this reason, \textit{Student}'s jobs barely wait in the with malleability.
+}
+
+Then, malleable jobs are progressively expanded following their respective reconfiguration policies.
 The more resources assigned to the jobs, the lower the execution time (see Figure~\ref{fig:mpdata-speedup}). 
 However, reconfigurations come with a cost (see Figure~\ref{fig:mpdata-reconf}), and this cost is included in the execution time.
 
 \begin{figure*}[tbp]
     \centering
-        \includegraphics[clip,width=0.75\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/phd-stacked.pdf}
-        \caption{Mean student's job completion (waiting + execution) time (Y-axis) for the four experiments (X-axis). \textit{Student} jobs barely wait in the \texttt{Dynamic} experiments.}
+        \includegraphics[clip,width=0.95\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/phd-stacked.png}
+        \caption{Average student's job completion (waiting + execution) time (Y-axis) for the four experiments (X-axis).}
         \label{fig:phd_completion}
 \end{figure*}
 
 \begin{figure*}[tbp]
-        \includegraphics[clip,width=0.9\linewidth,trim={0.2cm 0.1cm 0.2cm 0.1cm}]{figures/node-hours3.png}
-        \caption{Individual student job's Node-hours (Y-axis) grouped by colors for the four experiments (X-axis). Dashed lines represent the mean per experiment (Y-axis).}
+    \centering
+        \includegraphics[clip,width=0.95\linewidth,trim={0.2cm 0.1cm 0.2cm 0.1cm}]{figures/node-hours3.png}
+        \caption{Individual student job's Node-hours (Y-axis) grouped by colors for the four experiments (X-axis). Dashed lines represent the average per experiment (Y-axis).}
         \label{fig:phd_nodehours}
 \end{figure*}
 
+\review{
 The total cost of reconfigurations in our case is given in Table~\ref{tab:reconfig}.
-% contains the data related to the reconfigurations.
-%For each experiment (first column), we find the number of reconfigurations (second column) in the format \textit{expansions + shrinkages}, the mean time of those reconfigurations (third column), and the total overhead generated by the reconfigurations (fourth column).
+And additional, Table~\ref{tab:reconfig_pairs} details the reconfigurations performed in the \textit{ParEfficiency} experiment.
+}
+
+\iffalse
 \begin{table*}[tbp]
 \centering
 \fontsize{9.5}{14pt}\selectfont
@@ -902,6 +910,25 @@ ParEfficiency & 18+7 & 77 s. & 1,929 s. \\
 }
 \label{tab:reconfig}
 \end{table*}
+\fi
+
+\begin{table*}[tbp]
+\centering
+\fontsize{9.5pt}{14pt}\selectfont
+\begin{tabular}{l r r r  r r r  r r r}
+    \toprule
+    & \multicolumn{3}{c}{Expansions} & \multicolumn{3}{c}{Shrinkages} & \multicolumn{3}{c}{Total} \\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+    & \# & Avg. & Overhead & \# & Avg. & Overhead & \# & Avg. & Overhead \\
+    \midrule
+    AlwaysGrow   & 27 & 160 s. & 4,332 s. & 0  & --    & 0 s.    & 27 & 160 s. & 4,332 s. \\
+    ParEfficiency & 18 &  87.8 s.  & 1,580 s. & 7  & 48.9 s. &  349 s.  & 25 & 76.9 s.  & 1,929 s. \\
+    \bottomrule
+\end{tabular}
+\caption{Per experiment: number of reconfigurations (expansions / shrinkages), average reconfiguration time and accumulated overhead (actual seconds).}
+\label{tab:reconfig}
+\end{table*}
+
 In \textit{ParEfficiency}, the overhead is reduced thanks to preventing the slowest reconfigurations.
 Furthermore, since the malleable jobs are adapted to the workload and the performance, there are seven \textit{32 to 16}-node shrinkages to increase productivity by reducing the student workload time by 10\% compared to \textit{AlwaysGrow}.
 
@@ -913,6 +940,57 @@ As shown in Figure~\ref{fig:mpdata-speedup}, the PhD jobs deliver lower speedup 
 For this reason, the consumption is 17 node-hours higher in the \textit{StaticN32} experiment.
 Regarding MPI malleability, since those jobs can be resized, they show variable node hours within the experiments (standard deviation $>$ $4$).
 Remarkably, \textit{AlwaysGrow} and \textit{ParEfficiency} contain the two ``cheapest'' jobs because they run most, or the whole of their time, respectively, in 8 nodes. It is with eight nodes that the maximum performance is attained.
+
+\begin{table}
+\caption{Reconfigurations in the \textit{ParEfficiency} experiment (time in actual seconds). Gray rows represent shrinkages.}
+\label{tab:reconfig_pairs}
+\begin{tabular}{llll}
+\toprule
+& \textbf{Initial Nodes} & \textbf{Final Nodes} & \textbf{Time} \\
+\midrule
+ \multirow{3}{*}{\textbf{Job Id 247}} 
+            & 2 & 4 & 254 s. \\
+            & 4 & 8 & 136 s.\\
+            & 8 & 16 & 72 s.\\
+\midrule
+ \multirow{4}{*}{\textbf{Job Id 522}} 
+            & 8 & 16 & 69 s.\\
+            & 16 & 32 & 43 s.\\
+            & \rowcolor{lightgray} 32 & 16 & 47 s.\\
+            & 16 & 32 & 34 s.\\
+\midrule
+ \multirow{4}{*}{\textbf{Job Id 758}} 
+            & 4 & 8 & 133 s.\\
+            & 8 & 16 & 69 s.\\
+            & 16 & 32 & 35 s.\\
+            & \rowcolor{lightgray} 32 & 16 & 49 s.\\
+\midrule
+ \multirow{1}{*}{\textbf{Job Id 853}} 
+            & 8 & 16 & 68 s.\\
+\midrule
+\multirow{1}{*}{\textbf{Job Id 1068}} 
+            & \rowcolor{lightgray} 32 & 16 & 47 s.\\
+\midrule
+\multirow{1}{*}{\textbf{Job Id 1242}} 
+            & 8 & 16 & 66 s.\\
+\midrule
+\multirow{3}{*}{\textbf{Job Id 1406}} 
+                & 2 & 4 & 253 s.\\
+                & 4 & 8 & 135 s.\\
+                & 8 & 16 & 67 s.\\
+\midrule
+ \multirow{8}{*}{\textbf{Job Id 1463}} 
+            & 16 & 32 & 38 s.\\
+            & \rowcolor{lightgray} 32 & 16 & 48 s.\\
+            & 16 & 32 & 36 s.\\
+            & \rowcolor{lightgray} 32 & 16 & 51 s.\\
+            & 16 & 32 & 38 s.\\
+            & \rowcolor{lightgray} 32 & 16 & 51 s.\\
+            & 16 & 32 & 34 s.\\
+            & \rowcolor{lightgray} 32 & 16 & 50 s.\\        
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Discussion}\label{sec:discussion}
 Our methodology adapts historical workload traces to a target infrastructure, accounting for the fact that reproducing logs on the same system is often not feasible. The goal is to provide a realistic path for gradual DRM adoption in HPC centers.
@@ -965,6 +1043,14 @@ We have demonstrated its effectiveness through a novel use case in which an HPC 
 %\section*{Acknowledgments}
 
 \section*{CRediT authorship contribution statement}
+\begin{itemize}
+    \item \textbf{Sergio Iserte:} Conceptualization, Methodology, Software, Investigation, Writing - Original Draft, Visualization, Project administration.
+    \item \textbf{Maël Madon:}  Methodology, Investigation, Software, Writing - Original Draft, Visualization.
+    \item \textbf{Georges Da Costa:} Investigation, Writing - Review \& Editing, Supervision.
+    \item \textbf{Jean-Marc Pierson:} Investigation, Writing - Review \& Editing, Supervision.
+    \item \textbf{Antonio J. Peña:} Resources, Writing - Review \& Editing, Supervision, Funding acquisition.
+\end{itemize}
+\iffalse
 \textbf{Sergio Iserte:} Conceptualization, Methodology, Software,
 Investigation, Writing - Original Draft, Visualization, Project administration.
 \textbf{Maël Madon:}  Methodology, Investigation, Software, Writing - Original Draft, Visualization.
@@ -972,6 +1058,7 @@ Investigation, Writing - Original Draft, Visualization, Project administration.
 \textbf{Jean-Marc Pierson:} Investigation, Writing - Review \& Editing, Supervision.
 \textbf{Antonio J. Peña:} Resources, Writing - Review \& Editing, Supervision, Funding acquisition.
 % https://www.elsevier.com/researcher/author/policies-and-guidelines/credit-author-statement
+\fi
 
 \section*{Declaration of competing interest}
 The authors have no conflicts of interest to declare that are relevant to the content of this article.
