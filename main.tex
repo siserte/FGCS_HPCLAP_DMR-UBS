@@ -658,30 +658,7 @@ In the case of replay with feedback (like here with the PhD student workload), t
 On the contrary, the makespan in timestamp-based replay (like here with the baseline workload) is dictated by the original submission timestamps.
 In this case, the primary performance metric is the waiting times for each job.
 
-\subsection{Makespan}\label{subsec:makespan}
-\review{
-The completion time of the workload, or workload makespan, is a critical metric for the PhD student, who has a deadline to meet.
-Particularly, she needs to focus on the time it takes to complete her 10-job workload.
-Table~\ref{tab:alloc-wait} compiles execution metrics of the different experiments.
-The first two rows of Table~\ref{tab:alloc-wait} (after the header) report the execution times for the two workloads. The first row corresponds to the complete workload (Baseline + PhD student), which also defines the overall experiment duration, while the second row refers exclusively to the PhD student workload.
-\\\indent
-As discussed in the introduction of this section, the first row is not meaningful, since makespan is dictated by the rigid submission timestamps replayed from the original log.
-This is why all the values in this row are equal to the \textit{Baseline} makespan.
-The only exception is \textit{StaticN32}, whose makespan is ruled by the PhD job, as shown in Figure~\ref{multifig:static32}.
-The difficulty of scheduling large jobs in a congested system is manisfested in this experiment that reportes a completion time increased compared to \textit{Baseline}.
-\\\indent
-In the remaining experiments (\textit{StaticN16}, \textit{AlwaysGrow}, and \textit{ParEfficiency}), the PhD student jobs are completed before the end of the baseline workflow.
-Of course, reducing the PhD student jobs size from 32 to 16 nodes helps the backfilling scheduler to find gaps to fit the jobs, thus reducing the PhD student workload completion time from 45.15 to 38.50 actual hours.
-However, it is not enough to meet the student's deadline of 14 scaled days.
-Figure~\ref{multifig:static16} shows that the last two jobs of the student are still running after the deadline.
-\textit{AlwaysGrow}, leverages malleability to reduce the student makespan, but it still needs 36.62 actual hours, which is still beyond the deadline (see Figure~\ref{multifig:dyngrow}).
-Notably, the ``smartest'' dynamic configuration, \textit{ParEfficiency}, needs $\approx73\%$ the time to complete the student jobs compared to \textit{StaticN32} without delaying the baseline workload and meeting the deadline.
-Figure~\ref{multifig:dynpe} shows that the last job of the student finishes before the deadline.
-\\\indent
-In the following subsections, we will see how malleability affects the resource allocation rate and the waiting time, which are the two factors that explain the makespan reduction of the PhD student workload.
-}
-
-\begin{table*}[htbp]
+\begin{table*}[tbp]
     \fontsize{9.5pt}{20pt}\selectfont
     \centering
     \begin{tabular}{lcccccc}
@@ -705,29 +682,6 @@ In the following subsections, we will see how malleability affects the resource 
     \label{tab:alloc-wait}
 \end{table*}
 
-\iffalse
-\begin{figure*}[tbp]
-    \centering
-    \includegraphics[clip,width=0.6\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/heatmap.pdf}
-    \caption{Heatmap representing the makespan (s.) of experiments (Y-axis) and workloads (X-axis). \textit{ParEfficiency} completes the \textit{student} workload in 73\% of the \textit{StaticN32} time.}
-    \label{fig:heatmap}
-\end{figure*}
-\fi
-
-\subsection{Resource Allocation Rate}\label{subsec:utilization}
-Figure~\ref{fig:baseline} showcases the total number of allocated nodes for every actual second of the \textit{Baseline} experiment.
-Correspondingly, figures~\ref{multifig:static32},~\ref{multifig:static16},~\ref{multifig:dyngrow}, and~\ref{multifig:dynpe} showcase stacked bar plots where each timestamp depicts the sum of the allocated resources by the baseline plus the PhD student workloads.
-The figures present different patterns: while the static experiments in figures~\ref{multifig:static32} and~\ref{multifig:static16} show how the student jobs have to wait for slots that satisfy the static requests, the malleable experiments in figures~\ref{multifig:dyngrow} and~\ref{multifig:dynpe} leverage fragmentation where student jobs run.
-
-\review{
-
-}
-
-Rows~2 and~3 of Table~\ref{tab:alloc-wait} compile, respectively, the average and standard deviation of the resource allocation rate for the five experiments.
-Figure~\ref{fig:resource_allocation} gives the allocation rate for each experiment, which is the average node utilization over the makespan of the experiment, excluding the warm-up period.
-We observe that overlapping the PhD student workload to the baseline supposes an increase of around 7--10\% of the resource allocation.
-The figure shows that malleable experiments present a similar allocation rate to the static scenarios.
-This means that MPI malleability can maintain resource utilization while reducing the makespan of the PhD workload, as we will see in the following analyses.
 
 \begin{figure*}[tbp]
 \centering
@@ -738,6 +692,29 @@ This means that MPI malleability can maintain resource utilization while reducin
     \caption{Resource allocation (Y-axis) in each second of the execution (X-axis) for the \textit{Baseline} experiment.}
     \label{fig:baseline}
 \end{figure*}
+
+\subsection{Makespan}\label{subsec:makespan}
+\review{
+The completion time of the workload, or workload makespan, is a critical metric for the PhD student, who has a deadline to meet.
+Particularly, she needs to focus on the time it takes to complete her 10-job workload.
+Table~\ref{tab:alloc-wait} compiles execution metrics of the different experiments.
+The first two rows of Table~\ref{tab:alloc-wait} (after the header) report the execution times for the two workloads. The first row corresponds to the complete workload (Baseline + PhD student), which also defines the overall experiment duration, while the second row refers exclusively to the PhD student workload.
+\\\indent
+As discussed in the introduction of this section, the first row is not meaningful, since makespan is dictated by the rigid submission timestamps replayed from the original log.
+This is why all the values in this row are equal to the \textit{Baseline} makespan.
+The only exception is \textit{StaticN32}, whose makespan is ruled by the PhD job, as shown in Figure~\ref{multifig:static32}.
+The difficulty of scheduling large jobs in a congested system is manisfested in this experiment that reportes a completion time increased compared to \textit{Baseline}.
+\\\indent
+In the remaining experiments (\textit{StaticN16}, \textit{AlwaysGrow}, and \textit{ParEfficiency}), the PhD student jobs are completed before the end of the baseline workflow.
+Of course, reducing the PhD student jobs size from 32 to 16 nodes helps the backfilling scheduler to find gaps to fit the jobs, thus reducing the PhD student workload completion time from 45.15 to 38.50 actual hours.
+However, it is not enough to meet the student's deadline of 14 scaled days.
+Figure~\ref{multifig:static16} shows that the last two jobs of the student are still running after the deadline.
+\textit{AlwaysGrow}, leverages malleability to reduce the student makespan, but it still needs 36.62 actual hours, which is still beyond the deadline (see Figure~\ref{multifig:dyngrow}).
+Notably, the ``smartest'' dynamic configuration, \textit{ParEfficiency}, needs $\approx73\%$ the time to complete the student jobs compared to \textit{StaticN32} without delaying the baseline workload and meeting the deadline.
+Figure~\ref{multifig:dynpe} shows that the last job of the student finishes before the deadline.
+\\\indent
+In the following subsections, we will see how malleability affects the resource allocation rate and the waiting time, which are the two factors that explain the makespan reduction of the PhD student workload.
+}
 
 \begin{figure*}[tbp]
     \centering
@@ -800,17 +777,42 @@ This means that MPI malleability can maintain resource utilization while reducin
     \label{fig:dynamic-experiments}
 \end{figure*}
 
+\iffalse
+\begin{figure*}[tbp]
+    \centering
+    \includegraphics[clip,width=0.6\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/heatmap.pdf}
+    \caption{Heatmap representing the makespan (s.) of experiments (Y-axis) and workloads (X-axis). \textit{ParEfficiency} completes the \textit{student} workload in 73\% of the \textit{StaticN32} time.}
+    \label{fig:heatmap}
+\end{figure*}
+\fi
+
+\subsection{Resource Allocation Rate}\label{subsec:utilization}
+Figure~\ref{fig:baseline} showcases the total number of allocated nodes for every actual second of the \textit{Baseline} experiment.
+Correspondingly, figures~\ref{multifig:static32},~\ref{multifig:static16},~\ref{multifig:dyngrow}, and~\ref{multifig:dynpe} showcase stacked bar plots where each timestamp depicts the sum of the allocated resources by the baseline plus the PhD student workloads.
+The figures present different patterns: while the static experiments in figures~\ref{multifig:static32} and~\ref{multifig:static16} show how the student jobs have to wait for slots that satisfy the static requests, the malleable experiments in figures~\ref{multifig:dyngrow} and~\ref{multifig:dynpe} leverage fragmentation where student jobs run.
+
+\review{
+Table~\ref{tab:alloc-wait} contains in the \nth{4} row the allocation rate for each experiment, which is the average node utilization over the makespan of the experiment, excluding the warm-up period.
+In turn, the \nth{5} row presents the standard deviation of the allocation rate.
+\\\indent
+\textit{Baseline} provides the lower average allocation rate with the highest standard deviation, which is expected since the platform presents many idle regions of resources during the execution (see Figure~\ref{fig:baseline}).
+Evidently, the remaining experiments present higher allocation rates because of the 10 extra jobs of the PhD student.
+While \textit{StaticN32} presents the highest average allocation rate, it also shows the lowest standard deviation, which means that the platform is uniformly more saturated during the experiment (see Figure~\ref{multifig:static32}).
+The remaining experiments present similar average allocation rates, with higher standard deviations than \textit{StaticN32}, which means that the platform presents more idle regions during the execution (see figures~\ref{multifig:static16},~\ref{multifig:dyngrow}, and~\ref{multifig:dynpe}), particularly at the end of the workload execution, when the jobs of the baseline workload are still running, but the PhD student jobs have already finished.
+In this regard, the rigid jobs of \textit{StaticN16} and the malleable jobs of \textit{AlwaysGrow} and \textit{ParEfficiency} make no difference in the allocation rate.
+That is why we need to understand better the makespan reduction of the PhD student workload with studying the waiting time in the next section, where we see how MPI malleability can maintain resource utilization while reducing the completion times.
+}
+
 \subsection{Waiting time}\label{subsec:wt}
-To analyze how baseline jobs are affected by the submission of extra jobs from the PhD student,
-we look at their mean waiting times in the different scenarios (Figure~\ref{fig:baseline_waiting}).
-% Particularly, Figure~\ref{fig:baseline_waiting} depicts the variations in the mean waiting times of the baseline jobs for all the experiments.
-It is patent that the original workload suffers longer delays on average when the PhD student jobs are submitted:
-the mean waiting time increases from 1,725s to 3,007s or 4,365s in the best and worst cases, respectively.
-Besides, the two dynamic experiments (\textit{AlwaysGrow} and \textit{ParEfficiency})
-pose a larger impact on the baseline waiting time. 
-This can be explained by the greedy nature of the malleability configurations,
-starting with fewer resources and expanding as resources are released in the platform,
-making the baseline jobs wait longer.
+\review{
+To analyze how baseline jobs are affected by the submission of jobs from the PhD student, we look at their average waiting times and standard deviation in the different scenarios (see Table~\ref{tab:alloc-wait}, \nth{6} and \nth{7} rows).
+\\\indent
+It is patent that the original workload suffers longer delays on average when the PhD student jobs are submitted: the average waiting time increases from 1,725.04 s. to 3,007.24 s. or 4,365.89 s. in the best and worst cases, respectively.
+This increment of up to $\approx2.53x$ is expected since the system is more saturated with the extra jobs.
+\\\indent
+Besides, the two dynamic experiments (\textit{AlwaysGrow} and \textit{ParEfficiency}) pose a larger impact on the baseline waiting time, in terms of average and standard deviation.
+This can be explained by the greedy nature of the malleable configurations, starting with fewer resources and expanding as resources are released in the platform, making the baseline jobs wait longer.
+}
 
 \iffalse
 \begin{figure*}[tbp]
@@ -836,10 +838,6 @@ One of the most valuable insights we extract is the behavior detected around job
 This is because there is a period around July \nth{8} and \nth{9}, as shown in Figure~\ref{fig:wl_distrib_sub_top}, where the submissions drastically decrease, and it takes over a day to drain the queue.
 That is why jobs submitted after that event present a virtually null waiting time.
 
-%Figure~\ref{fig:waitFreq} counts the number of jobs for different waiting time groups.
-%Although the vast majority of jobs are in the first three bins, non-baseline experiments feature a higher share of jobs in the longer waiting time bins.
-%Among them, dynamic jobs are more common in the middle and appear minimally on the right side of the histogram.
-
 \begin{figure*}[tbp]
     \centering
     \begin{overpic}[clip,width=0.95\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitAcc.png}
@@ -863,15 +861,6 @@ That is why jobs submitted after that event present a virtually null waiting tim
     \caption{Difference in job waiting times compared to the baseline experiment.} %The red line points out a change in the submission rate.}
     \label{fig:waitDiff}
 \end{figure*}
-
-\iffalse
-\begin{figure*}[tbp]
-    \centering
-    \includegraphics[clip,width=0.7\linewidth,trim={0.1cm 0.1cm 0.1cm 0.1cm}]{figures/waitFreq.png}
-    \caption{Job counting grouped by waiting time.}
-    \label{fig:waitFreq}
-\end{figure*}
-\fi
 
 \subsection{Focus on the PhD Student}
 Figure~\ref{fig:phd_completion} illustrates the mean completion time of the student's jobs.
