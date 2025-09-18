@@ -113,7 +113,7 @@ Dynamic Resource Management (DRM) techniques can be leveraged to maximize throug
 Although DRM has been extensively studied through analytical workloads and simulations, skepticism persists among end administrators and users regarding their feasibility under real-world conditions.
 To address this problem, we propose a novel methodology for validating DRM techniques, such as malleability, in realistic scenarios that reproduce actual cluster conditions of jobs and users by replaying workload logs on a High-performance Computing (HPC) infrastructure.
 Our methodology is capable of adapting the workload to the target cluster.
-We evaluate our methodology in a malleability-enabled 125-node partition of the Marenostrum~5 supercomputer. Our results validate the proposed method and assess the benefits of MPI malleability on a novel use case of a pioneer user of malleability (our ``PhD Student''): parallel-efficiency-aware malleability reduced a malleable workload time by 27\% without delaying the baseline workload, although introducing queueing delays for individual jobs, as well as increasing global resource utilization by 8\%.
+We evaluate our methodology in a malleability-enabled 125-node partition of the Marenostrum~5 supercomputer. Our results validate the proposed method and assess the benefits of MPI malleability on a novel use case of a pioneer user of malleability (our ``PhD Student''): parallel-efficiency-aware malleability reduced a malleable workload time by 27\% without delaying the baseline workload, although introducing queueing delays for individual jobs, but maintaining the resource utilization rate.
 \end{abstract}
 
 % Use if graphical abstract is present
@@ -136,11 +136,13 @@ We evaluate our methodology in a malleability-enabled 125-node partition of the 
 \section{Introduction}\label{intro}
 High-performance computing (HPC) facilities are critical for advancing scientific research, engineering, and data analysis across various domains, from genomic research~\cite{martinez_dynamic_2013, zhong_gpu_2025} to multi-physics simulations~\cite{hess_gromacs_2008, vazquez_alya_2016, caviedes-voullieme_serghei_2023} through artificial intelligence~\cite{martinez-cuenca_use_2023, rosciszewski_optimizing_2023, godoy_large_2024}. 
 These computational clusters rely on efficiently utilizing resources to maximize their productivity. Dynamic resource management (DRM) techniques have emerged as key strategies to improve the utilization of these systems~\cite{bungartz_invasive_2013, garcia_hints_2014, lopez_openmp_2021}. These techniques enable the flexible allocation and reallocation of computational resources and reconfiguring jobs accordingly to adapt to the dynamic nature of HPC workloads.
-Among others, malleability based on the Message-Passing Interface (MPI) is one of the most extended DRM approaches to process layout reshape and data redistribution~\cite{martin_flex-mpi_2013, martin-alvarez_proteo_2024, huber_bridging_2025, iserte_resource_2025}.
+Among others, malleability based on the Message-Passing Interface (MPI) is one of the most extended DRM approaches to process layout reshape and data redistribution
+~\cite{10.1145/3555819.3555856, iserte_agut_high-throughput_2018, martin_flex-mpi_2013, bhattarai_dynamic_2024}.
+%~\cite{martin_flex-mpi_2013, martin-alvarez_proteo_2024, huber_bridging_2025, iserte_resource_2025}.
 %Notably, message-passing interface (MPI) malleability facilitates 1) resource reallocation, 2) process layout reshaping, 3) data redistribution among ranks, and 4) seamless job resumption during runtime. 
 %This flexibility significantly boosts productivity by increasing the number of completed jobs per unit of time and optimizing overall resource utilization.
 
-Despite their potential, DRM techniques face several challenges that hinder their adoption in production environments~\cite{iserte_dmr_2018}.
+Despite their potential, DRM techniques face several challenges that hinder their adoption in production environments~\cite{iserte_resource_2025}.
 Particularly, MPI malleability requires 1) a malleability-ready resource management system (RMS), which many existing facilities do not possess, and 2) a malleability framework to develop malleable applications compatible with the RMS and the available distributed parallel runtime systems in the cluster.
 These kinds of limitations increase the complexity of evaluating DRM techniques with realistic workloads and foster skepticism among end users and system administrators regarding DRM's practical benefits and feasibility.
 In this regard, previous studies evaluating DRM techniques have relied on simplistic simulations, biased benchmarks, or synthetic traces, often failing to accurately represent real-world systems' conditions. These analytic workloads do not capture the variability and unpredictability of user behaviors observed in production systems. As a result, researchers in this field have faced challenges in conducting impactful demonstrations that significantly influence the community.
@@ -959,7 +961,7 @@ Remarkably, \textit{AlwaysGrow} and \textit{ParEfficiency} contain the two ``che
  \multirow{4}{*}{\textbf{2}} 
             & 8 & 16 & 69 s.\\
             & 16 & 32 & 43 s.\\
-            & \rowcolor{lightgray} 32 & 16 & 47 s.\\
+            & \cellcolor{lightgray}32 & \cellcolor{lightgray}16 & \cellcolor{lightgray}47 s.\\
             & 16 & 32 & 34 s.\\
 \midrule
  \multirow{1}{*}{\textbf{3}} 
@@ -969,7 +971,7 @@ Remarkably, \textit{AlwaysGrow} and \textit{ParEfficiency} contain the two ``che
             & 4 & 8 & 133 s.\\
             & 8 & 16 & 69 s.\\
             & 16 & 32 & 35 s.\\
-            & \rowcolor{lightgray} 32 & 16 & 49 s.\\
+            & \cellcolor{lightgray}32 & \cellcolor{lightgray}16 & \cellcolor{lightgray}49 s.\\
 \midrule
  \multirow{1}{*}{\textbf{5}} 
             & 8 & 16 & 68 s.\\
@@ -978,7 +980,7 @@ Remarkably, \textit{AlwaysGrow} and \textit{ParEfficiency} contain the two ``che
             & 8 & 16 & 66 s.\\
 \midrule
 \multirow{1}{*}{\textbf{7}} 
-            & \rowcolor{lightgray} 32 & 16 & 47 s.\\
+            & \cellcolor{lightgray}32 & \cellcolor{lightgray}16 & \cellcolor{lightgray}47 s.\\
 \midrule
 \multirow{3}{*}{\textbf{8}} 
                 & 2 & 4 & 253 s.\\
@@ -987,13 +989,13 @@ Remarkably, \textit{AlwaysGrow} and \textit{ParEfficiency} contain the two ``che
 \midrule
  \multirow{8}{*}{\textbf{9}} 
             & 16 & 32 & 38 s.\\
-            & \rowcolor{lightgray} 32 & 16 & 48 s.\\
+            & \cellcolor{lightgray}32 & \cellcolor{lightgray}16 & \cellcolor{lightgray}48 s.\\
             & 16 & 32 & 36 s.\\
-            & \rowcolor{lightgray} 32 & 16 & 51 s.\\
+            & \cellcolor{lightgray}32 & \cellcolor{lightgray}16 & \cellcolor{lightgray}51 s.\\
             & 16 & 32 & 38 s.\\
-            & \rowcolor{lightgray} 32 & 16 & 51 s.\\
+            & \cellcolor{lightgray}32 & \cellcolor{lightgray}16 & \cellcolor{lightgray}51 s.\\
             & 16 & 32 & 34 s.\\
-            & \rowcolor{lightgray} 32 & 16 & 50 s.\\        
+            & \cellcolor{lightgray}32 & \cellcolor{lightgray}16 & \cellcolor{lightgray}50 s.\\        
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1045,7 +1047,7 @@ Unlike previous studies that relied on benchmarks or simulations with synthetic 
 By leveraging real-world data and testing on an MPI malleability-enabled supercomputer's partition, we provide a realistic and actionable framework for evaluating new resource management and job scheduling policies.
 
 \review{
-We demonstrated the effectiveness of our approach through a novel use case, where an HPC user successfully leveraged MPI malleability to complete her workload on time. Validation in a supercomputing environment showed a 27\% reduction in malleable workload time and an 8\% increase in overall resource utilization. While individual jobs may experience delays, the baseline workload remains unaffected in terms of execution time. We believe this methodology is broadly applicable and represents a promising step toward integrating dynamic resource management into next-generation HPC infrastructures.
+We demonstrated the effectiveness of our approach through a novel use case, where an HPC user successfully leveraged MPI malleability to complete her workload on time. Validation in a supercomputing environment showed a 27\% reduction in malleable workload time maintaining the resource utilization rate. While individual jobs may experience delays, the baseline workload remains unaffected in terms of execution time. We believe this methodology is broadly applicable and represents a promising step toward integrating dynamic resource management into next-generation HPC infrastructures.
 }
 
 %\section*{Acknowledgments}
