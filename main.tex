@@ -931,9 +931,13 @@ Furthermore, since the malleable jobs are adapted to the workload and the perfor
 If we pay attention to the node-hours consumed by the PhD Student jobs, Figure~\ref{fig:phd_nodehours} shows that metric for each of those jobs in the experiments. 
 Furthermore, a dashed line represents the PhD student jobs mean node-hour per experiment.
 
+\review{
 Static jobs present a virtually constant node-hour consumption (standard deviation $<$ $1$). 
-As shown in Figure~\ref{fig:mpdata-speedup}, the PhD jobs deliver lower speedup running on 32 than in 16 nodes, $1.41x$ and $1.86x$, respectively.
-For this reason, the consumption is 17 node-hours higher in the \textit{StaticN32} experiment.
+In an ideal scenario where the application scaled linearly (i.e., achieving a $2\times$ speedup when doubling the number of nodes), the node-hour consumption would be identical in both \textit{StaticN32} and \textit{StaticN16}.
+However, the application exhibits sublinear scalability (see Figure~\ref{fig:mpdata-speedup}). Specifically, PhD jobs achieve only a $1.42\times$ speedup when increasing from 16 to 32 nodes.
+As a result, the \textit{StaticN32} configuration incurs an additional 17 node-hours of consumption compared to \textit{StaticN16}.
+}
+
 Regarding MPI malleability, since those jobs can be resized, they show variable node hours within the experiments (standard deviation $>$ $4$).
 Remarkably, \textit{AlwaysGrow} and \textit{ParEfficiency} contain the two ``cheapest'' jobs because they run most, or the whole of their time, respectively, in 8 nodes. It is with eight nodes that the maximum performance is attained.
 
