@@ -142,7 +142,10 @@ Among others, malleability based on the Message-Passing Interface (MPI) is one o
 Despite their potential, DRM techniques face several challenges that hinder their adoption in production environments~\cite{iserte_resource_2025}.
 Particularly, MPI malleability requires 1) a malleability-ready resource management system (RMS), which many existing facilities do not possess, and 2) a malleability framework to develop malleable applications compatible with the RMS and the available distributed parallel runtime systems in the cluster.
 These kinds of limitations increase the complexity of evaluating DRM techniques with realistic workloads and foster skepticism among end users and system administrators regarding DRM's practical benefits and feasibility.
-In this regard, previous studies evaluating DRM techniques have relied on simplistic simulations, biased benchmarks, or synthetic traces, often failing to accurately represent real-world systems' conditions. These analytic workloads do not capture the variability and unpredictability of user behaviors observed in production systems. As a result, researchers in this field have faced challenges in conducting impactful demonstrations that significantly influence the community (more details in Section~\ref{sec:related}).
+\review{
+    In this regard, previous studies evaluating DRM techniques have relied on simplistic simulations, biased benchmarks, or synthetic traces, often failing to accurately represent the conditions of real-world systems. For example, some works limit their evaluations to small-scale testbeds, which struggle to provide a nice picture of the queuing dynamics or contention effects of production supercomputers. Others employ synthetic workloads with uniform job sizes or idealized submission patterns, overlooking the variability and burstiness of user behavior. Still others focus only on single-application benchmarks, which, while useful to demonstrate mechanisms, do not provide insight into system-wide interactions with the RMS. These shortcomings have limited the impact of prior results, making it difficult for the community to assess the practical benefits of DRM techniques. A more detailed analysis of these studies is provided in Section~\ref{sec:related}.
+}
+%In this regard, previous studies evaluating DRM techniques have relied on simplistic simulations, biased benchmarks, or synthetic traces, often failing to accurately represent real-world systems' conditions. These analytic workloads do not capture the variability and unpredictability of user behaviors observed in production systems. As a result, researchers in this field have faced challenges in conducting impactful demonstrations that significantly influence the community (more details in Section~\ref{sec:related}).
 
 To address the challenges of evaluating DRM techniques, we propose a novel methodology that leverages supercomputer logs to generate realistic workloads based on actual user submission behaviors, including temporal patterns across hours and days of the week. Our approach introduces a mechanism called the \textit{User-Based Submitter}, designed to scale across different computing clusters. Rather than relying on synthetic simulations, this method replays real user interactions from production supercomputers, enabling a more accurate and comprehensive evaluation of DRM techniques.
 
@@ -202,17 +205,9 @@ The Dynamic Management of Resources Library (DMRlib) (detailed in Section~\ref{s
 The authors leveraged the Feitelson synthetic workload generator~\cite{feitelson_towards_1996} to evaluate job scheduling algorithms in HPC.
 This generator provides a way to simulate job arrival patterns, job sizes, and resource demands based on empirical data from real-world systems.
 
-%In summary, prior research in this field has explored the effects of DRM using approaches ranging from benchmarks to simulations, often relying on artificially generated workloads that arbitrarily set job scales and submission patterns (e.g., steady or bursty).
-
-%In contrast, with this research, we aim to validate past and future synthetic setups and results obtained for dynamic resource management replaying actual behaviors of users which are extremely difficult to be modeled with a mathematical function.
-
 While prior research has explored the potential of DRM through benchmarks and simulations, these studies often rely on synthetic workloads with arbitrarily defined job sizes and submission patterns—such as steady or bursty arrivals—that fail to capture the complexity and variability of real-world HPC usage. These simplified models limit the generalizability and applicability of the findings to production systems.
 
 In contrast, our work introduces a methodology that replays actual user behavior extracted from supercomputer logs, preserving the nuanced temporal and structural characteristics of real workloads. This approach enables the validation of past and future synthetic setups and their results, overcoming the limitations of synthetic modeling where user behavior is too complex to be accurately captured by mathematical functions. By grounding the evaluation in real-world conditions, we aim to bridge the gap between simulation-based studies and practical deployment in HPC infrastructures.
-
-%In contrast, this work introduces a more robust methodology, leveraging user sampling and workload replay with feedback. Using a workload log from the Parallel Workload Archive\footnote{\url{https://www.cs.huji.ac.il/labs/parallel/workload}}, we adapt, fit, and replicate its activity on a malleability-enabled supercomputer partition. Additionally, we introduce a user periodically running malleable scientific applications based on a defined behavioral pattern.
-
-%Out of the infinite cases that can be studied and given the current limitations of DRM integration in supercomputers, our study focuses on a practical scenario where infrastructure progressively adopts MPI malleability through a specific user with defined duties and deadlines. This scenario has not been previously studied in the literature.
 
 \section{Methodology}\label{sec:methodology}
 
@@ -379,8 +374,14 @@ The evaluation is performed in the general-purpose partition of the Marenostrum 
 The nodes of this partition are based on Intel Sapphire Rapids (4\textsuperscript{th} Generation Intel Xeon Scalable Processors), each equipped with two Intel Xeon Platinum 8480+ with 56 cores running at 2~GHz of base frequency, for a total of 112 cores and 256~GB of DDR5 memory.
 The nodes are interconnected through a 100~Gbit/s ConnectX-7 NDR200 InfiniBand network.
 
-Regarding the software stack, the executions rely on the GCC-10.4 compiler, the MPICH-3.2 MPI implementation, and a customized version of Slurm to support malleability included in the dynamic resource management framework DMRlib. 
-\review{The malleability-enabled Slurm version used in this work is based on Slurm-17.02.0-0pre1 and extends its functionality through a resource selection plugin that supports malleability. The plugin builds upon the \texttt{select/linear} resource selection policy and remains fully compatible with Slurm’s native support for moldability. An extensive evaluation of this plugin, considering workloads with varying proportions of moldable and malleable jobs, is presented in~\cite{iserte_dmrlib_2020}.
+Regarding the software stack, the executions rely on the GCC-10.4 compiler, and the MPICH-3.2 MPI implementation.
+\review{
+We are aware of the current incompatibility between UCX and \texttt{MPI\_Comm\_spawn} in MPICH. For this reason, we opted to use OFI as the transport layer protocol instead.
+At the same time, a new version of DMR (DMRv2) is under development, incorporating support for Open MPI and UCX. Preliminary results of this work have been published in~\cite{iserte_malleable_2025}.
+}
+
+The RMS is a customized version of Slurm to support malleability included in the dynamic resource management framework DMRlib. 
+\review{The malleability-enabled Slurm provided in DMRlib is based on Slurm-17.02.0-0pre1 and extends its functionality through a resource selection plugin that supports malleability. The plugin builds upon the \texttt{select/linear} resource selection policy and remains fully compatible with Slurm’s native support for moldability. An extensive evaluation of this plugin, considering workloads with varying proportions of moldable and malleable jobs, is presented in~\cite{iserte_dmrlib_2020}.
 That work concludes that moldability is not enough to reap the benefits of dynamic resource management, and malleability is required to achieve significant improvements in resource utilization and job throughput.
 \\
 In the current work, we have extended that plugin with performance metrics from TALP to drive malleability decisions as explained in Section~\ref{subsubsec:exps}.
@@ -864,6 +865,9 @@ That is why jobs submitted after that event present a virtually null waiting tim
     \label{fig:waitDiff}
 \end{figure*}
 
+\review{
+The gap in think time observed around timestamp 80,000 in Figure~\ref{multifig:dynpe} corresponds to Job~7 (see Table~\ref{tab:reconfig_pairs}), which experienced a delay of nearly four hours before initiation. This behavior is not an artifact of our methodology but rather the result of the scheduling dynamics in Slurm. Specifically, the delay was caused by the higher priority of other pending jobs in the queue. While backfilling can allow jobs to advance when resources are available, Slurm’s fairness policy also incorporates accumulated waiting time into its priority calculation. Consequently, student's Job~7 remained pending until its priority increased sufficiently to be scheduled.}
+
 \subsection{Focus on the PhD Student}
 Figure~\ref{fig:phd_completion} illustrates the average completion time of the student's jobs.
 The completion time is composed of the sum of the waiting time and the execution time. 
@@ -893,6 +897,11 @@ However, reconfigurations come with a cost (see Figure~\ref{fig:mpdata-reconf}),
 
 \review{
 The total cost of reconfigurations in our case is given in Table~\ref{tab:reconfig}.
+\\\indent
+The \textit{AlwaysGrow} policy was designed to aggressively pursue any opportunity for expansion, regardless of the immediate cost, in order to bring the job to its upper bounds as soon as possible. While it is true that some reconfigurations under this policy may be slow and less profitable, they serve to highlight the trade-offs involved when prioritizing growth over efficiency.
+\\\indent
+In contrast, the \textit{ParEfficiency} policy incorporates a more selective strategy, resulting in better overall efficiency. The comparison between these two policies is intentional: \textit{AlwaysGrow} illustrates the risks of unfiltered expansion, while \textit{ParEfficiency} demonstrates how threshold-based inhibition can yield more balanced outcomes. This contrast helps validate the need for adaptive policies and supports the broader argument for tunable malleability mechanisms in HPC environments.
+\\\indent
 Additionally, Table~\ref{tab:reconfig_pairs} details the reconfigurations performed in the \textit{ParEfficiency} experiment.
 }
 
