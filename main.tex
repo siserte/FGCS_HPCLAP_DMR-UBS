@@ -638,6 +638,12 @@ With these experiments, we will illustrate scenarios that represent different us
     If no job may be initiated and there are available resources in the cluster (line~10), the policy checks the current parallel efficiency. If the value exceeds a determined threshold (line~11), indicating that the execution may still leverage additional resources, the malleable job will be expanded (line~12).
 
     This policy aims to obtain as many resources as possible if no other job in the queue may use them. However, suppose any job in the queue may be initiated, and the malleable job is not reasonably using the resources (within a parallel efficiency threshold). In that case, the RMS reassigns the resources to a pending job in order to increase global cluster productivity and efficiency.
+
+    \review{
+    Notice that preliminary tests varying the PE upper threshold by $\pm(0.05\text{--}0.1)$ and lower threshold by $\pm0.05$ showed no significant deviation in the key outcomes: the student job’s makespan remained consistently reduced, and baseline waiting-time impact was negligible, suggesting that the conclusions are robust within a reasonable range of parameter variation.
+    \\\indent
+    Furthermore, we completely rely on Slurm’s default scheduling mechanisms, namely the \texttt{sched/backfill} and \texttt{priority/multifactor} policies. When the priority of a job is increased (as in Algorithm~\ref{alg:reconf_policy}, line 5), Slurm recomputes the priorities of all queued jobs, ensuring fairness according to its standard policies. This adjustment may affect the ordering of jobs across the entire queue, not just within feasible backfill windows. However, a detailed design of scheduling and priority policies is beyond the scope of this work, as our focus is specifically on the resource selection policy \texttt{select/linear} that enables malleability.
+    }
 \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
